@@ -4,6 +4,9 @@ import struct
 import time
 import picamera
 
+my_server = '169.254.20.89'
+
+
 class SplitFrames(object):
     def __init__(self, connection):
         self.connection = connection
@@ -25,11 +28,12 @@ class SplitFrames(object):
         self.stream.write(buf)
 
 client_socket = socket.socket()
-client_socket.connect(('my_server', 8000))
+client_socket.connect((my_server, 8000))
 connection = client_socket.makefile('wb')
 try:
     output = SplitFrames(connection)
-    with picamera.PiCamera(resolution='VGA', framerate=30) as camera:
+    with picamera.PiCamera(resolution='VGA', framerate=60) as camera:
+        camera.start_preview()
         time.sleep(2)
         start = time.time()
         camera.start_recording(output, format='mjpeg')
@@ -38,6 +42,7 @@ try:
         # Write the terminating 0-length to the connection to let the
         # server know we're done
         connection.write(struct.pack('<L', 0))
+        
 finally:
     connection.close()
     client_socket.close()
