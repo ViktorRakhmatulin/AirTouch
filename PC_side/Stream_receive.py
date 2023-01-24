@@ -3,6 +3,7 @@ import socket
 import struct
 from PIL import Image
 import cv2
+import numpy
 print('Begin')
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)
@@ -30,6 +31,8 @@ try:
         # processing on it
         image_stream.seek(0)
         image = Image.open(image_stream)
+        opencvImage = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
+        cv2.imshow('Image', opencvImage)
         print('Image is %dx%d' % image.size)
         image.verify()
         print('Image is verified')
