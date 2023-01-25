@@ -6,6 +6,12 @@ import cv2
 import numpy
 import pupil_apriltags as apriltag
 import time
+
+
+
+camera_params=(4.9989302084566577e+02, 5.0320386297363052e+02, 3.2668799142880744e+02, 2.3439979484610001e+02)
+tag_size = 0.0375
+
 print('Begin')
 # Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
 # all interfaces)
@@ -63,9 +69,26 @@ try:
             (cX, cY) = (int(r.center[0]), int(r.center[1]))
             cv2.circle(opencvImage, (cX, cY), 5, (0, 0, 255), -1)
             # draw the pose of the AprilTag
-            cv2.line(opencvImage, (cX, cY), (int(r.pose_R[0][0] * 50 + cX), int(r.pose_R[0][1] * 50 + cY)), (255, 0, 0), 2)
-            cv2.line(opencvImage, (cX, cY), (int(r.pose_R[1][0] * 50 + cX), int(r.pose_R[1][1] * 50 + cY)), (0, 0, 255), 2)
-            cv2.line(opencvImage, (cX, cY), (int(r.pose_R[2][0] * 50 + cX), int(r.pose_R[2][1] * 50 + cY)), (0, 255, 0), 2)
+            fx, fy, cx, cy = camera_params
+            K = numpy.array([fx, 0, cx, 0, fy, cy, 0, 0, 1]).reshape(3, 3)
+
+            rvec, _ = cv2.Rodrigues(r.pose_R)
+            rvec = r.pose_R
+            
+            dcoeffs = numpy.zeros(5)
+
+            opoints = numpy.float32([[1,0,0],
+                             [0,-1,0],
+                             [0,0,-1]]).reshape(-1,3) * tag_size
+
+            ipoints, _ = cv2.projectPoints(opoints, rvec, r.pose_t, K, dcoeffs)
+            ipoints = numpy.round(ipoints).astype(int)
+
+            center = numpy.round(r.center).astype(int)
+            center = tuple(center.ravel())
+            cv2.line(opencvImage, center, tuple(ipoints[0].ravel()), (0,0,255), 2)
+            cv2.line(opencvImage, center, tuple(ipoints[1].ravel()), (0,255,0), 2)
+            cv2.line(opencvImage, center, tuple(ipoints[2].ravel()), (255,0,0), 2)
             # draw the tag family on the image
             id_fam = str(r.tag_id)
             cv2.putText(opencvImage, id_fam, (ptA[0], ptA[1] - 15),
