@@ -3,8 +3,11 @@ import socket
 import struct
 import time
 import picamera
+import cv2
+from readchar import readkey
 
-my_server = '169.254.20.89'
+my_server = '169.254.242.249' # Arcwy 
+my_server = '169.254.20.89'  # LoneWayfarer
 
 
 class SplitFrames(object):
@@ -30,22 +33,33 @@ class SplitFrames(object):
 client_socket = socket.socket()
 client_socket.connect((my_server, 8000))
 connection = client_socket.makefile('wb')
-try:
-    output = SplitFrames(connection)
-    with picamera.PiCamera(resolution='VGA', framerate=60) as camera:
-        camera.start_preview()
-        time.sleep(2)
-        start = time.time()
-        camera.start_recording(output, format='mjpeg')
-        camera.wait_recording(30)
-        camera.stop_recording()
+
+output = SplitFrames(connection)
+with picamera.PiCamera(resolution='VGA', framerate=30) as camera:
+    
+    camera.start_preview()
+    time.sleep(2)
+    start = time.time()
+    camera.start_recording(output, format='mjpeg')
+    while True: 
+        
+        #camera.wait_recording(1)
+        if readkey() == "q":
+            camera.stop_recording()
+            connection.close()
+            client_socket.close()
+            finish = time.time()
+            print('Sent %d images in %d seconds at %.2ffps' % (
+                    output.count, finish-start, output.count / (finish-start)))
+            raise Exception("Q pressed,recording stopped")
+        #camera.stop_recording()
         # Write the terminating 0-length to the connection to let the
         # server know we're done
-        connection.write(struct.pack('<L', 0))
+        #connection.write(struct.pack('<L', 0))
         
-finally:
+'''finally:
     connection.close()
     client_socket.close()
-    finish = time.time()
+    finish = time.time()'''
 print('Sent %d images in %d seconds at %.2ffps' % (
     output.count, finish-start, output.count / (finish-start)))
