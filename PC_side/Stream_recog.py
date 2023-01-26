@@ -25,11 +25,11 @@ print('Before trying')
 #Initializing detector
 detector = apriltag.Detector(
 		families = 'tag36h11',
-		nthreads = 1,
-		quad_decimate = 2.0,
-		quad_sigma = 0.7,
+		nthreads = 10,
+		quad_decimate = 0.5,
+		quad_sigma = 0,
 		refine_edges = 1,
-		decode_sharpening = 0.45,
+		decode_sharpening = 0.6,
 		debug = 0)
 try:
     while True:
@@ -52,7 +52,7 @@ try:
             #Aprilshit
         gray = cv2.cvtColor(opencvImage,cv2.COLOR_BGR2GRAY)
         #cv2.imshow("gray", gray)
-        results = detector.detect(gray, estimate_tag_pose=True, camera_params=(4.9989302084566577e+02, 5.0320386297363052e+02, 3.2668799142880744e+02, 2.3439979484610001e+02), tag_size=0.0375)
+        results = detector.detect(gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
 #        print("[INFO] {} total AprilTags detected".format(len(results)))
         for r in results:
             (ptA,ptB,ptC,ptD) = r.corners
@@ -61,20 +61,20 @@ try:
             ptD = (int(ptD[0]), int(ptD[1]))
             ptA = (int(ptA[0]), int(ptA[1]))
             # draw the bounding box of the AprilTag detection
-            cv2.line(opencvImage, ptA, ptB, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
+            cv2.line(gray, ptA, ptB, (0, 255, 0), 2)
+            cv2.line(gray, ptB, ptC, (0, 255, 0), 2)
+            cv2.line(gray, ptC, ptD, (0, 255, 0), 2)
+            cv2.line(gray, ptD, ptA, (0, 255, 0), 2)
             # draw the center (x, y)-coordinates of the AprilTag
             (cX, cY) = (int(r.center[0]), int(r.center[1]))
-            cv2.circle(opencvImage, (cX, cY), 5, (0, 0, 255), -1)
+            cv2.circle(gray, (cX, cY), 5, (0, 0, 255), -1)
             # draw the pose of the AprilTag
             fx, fy, cx, cy = camera_params
             K = numpy.array([fx, 0, cx, 0, fy, cy, 0, 0, 1]).reshape(3, 3)
 
             rvec, _ = cv2.Rodrigues(r.pose_R)
             rvec = r.pose_R
-            
+        
             dcoeffs = numpy.zeros(5)
 
             opoints = numpy.float32([[1,0,0],
@@ -86,15 +86,15 @@ try:
 
             center = numpy.round(r.center).astype(int)
             center = tuple(center.ravel())
-            cv2.line(opencvImage, center, tuple(ipoints[0].ravel()), (0,0,255), 2)
-            cv2.line(opencvImage, center, tuple(ipoints[1].ravel()), (0,255,0), 2)
-            cv2.line(opencvImage, center, tuple(ipoints[2].ravel()), (255,0,0), 2)
+            cv2.line(gray, center, tuple(ipoints[0].ravel()), (0,0,255), 2)
+            cv2.line(gray, center, tuple(ipoints[1].ravel()), (0,255,0), 2)
+            cv2.line(gray, center, tuple(ipoints[2].ravel()), (255,0,0), 2)
             # draw the tag family on the image
             id_fam = str(r.tag_id)
-            cv2.putText(opencvImage, id_fam, (ptA[0], ptA[1] - 15),
+            cv2.putText(gray, id_fam, (ptA[0], ptA[1] - 15),
             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             print("[INFO] tag family: {}".format(id_fam))
-        cv2.imshow('Image', opencvImage)
+        cv2.imshow('Image', gray)
         image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
