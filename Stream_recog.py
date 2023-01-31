@@ -6,6 +6,8 @@ import cv2
 import numpy
 import pupil_apriltags as apriltag
 import time
+from scipy.spatial.transform import Rotation as R
+import transforms3d as tf
 
 
 camera_params = (4.9989302084566577e+02, 5.0320386297363052e+02,
@@ -127,8 +129,7 @@ try:
             # store rotation matrix and translation vector, translate rotation matrix to quaternion, make string and send it to the client
             # and send it to the client
             rotation = r.pose_R
-            quaternion = p
-            translation = r.pose_t
+            rot_quat = tf.transformations.quaternion_from_matrix(rotation)
         cv2.imshow('Image', gray)
         image.verify()
 #        print('Image is verified')
