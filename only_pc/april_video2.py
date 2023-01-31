@@ -14,8 +14,8 @@ camera_params = (4.9989302084566577e+02, 5.0320386297363052e+02,
                  3.2668799142880744e+02, 2.3439979484610001e+02)
 tag_size = 0.0375
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5065
+#UDP_IP = "127.0.0.1"
+#UDP_PORT = 5065
 #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 last = []
@@ -24,20 +24,26 @@ cap = cv2.VideoCapture(0)
 # Initializing detector
 detector = apriltag.Detector(
     families='tag36h11',
-    nthreads=10,
+    nthreads=1,
     quad_decimate=0.5,
     quad_sigma=0,
     refine_edges=1,
     decode_sharpening=0.6,
     debug=0)
 
-
+i = 0
 while (1):
     # Get image
     ret, frame = cap.read()
     # Detect button
+    k=cv2.waitKey(1)
+    if k==27:
+        break
+    elif k==ord('s'):
+        i+=1
     # Detect apriltag
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    image = frame
     results = detector.detect(
             gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
 #        print("[INFO] {} total AprilTags detected".format(len(results)))
@@ -49,13 +55,13 @@ while (1):
         ptD = (int(ptD[0]), int(ptD[1]))
         ptA = (int(ptA[0]), int(ptA[1]))
         # draw the bounding box of the AprilTag detection
-        cv2.line(gray, ptA, ptB, (0, 255, 0), 2)
-        cv2.line(gray, ptB, ptC, (0, 255, 0), 2)
-        cv2.line(gray, ptC, ptD, (0, 255, 0), 2)
-        cv2.line(gray, ptD, ptA, (0, 255, 0), 2)
+        cv2.line(image, ptA, ptB, (0, 255, 0), 2)
+        cv2.line(image, ptB, ptC, (0, 255, 0), 2)
+        cv2.line(image, ptC, ptD, (0, 255, 0), 2)
+        cv2.line(image, ptD, ptA, (0, 255, 0), 2)
         # draw the center (x, y)-coordinates of the AprilTag
         (cX, cY) = (int(r.center[0]), int(r.center[1]))
-        cv2.circle(gray, (cX, cY), 5, (0, 0, 255), -1)
+        cv2.circle(image, (cX, cY), 5, (0, 0, 255), -1)
         # extract camera parameters
         fx, fy, cx, cy = camera_params
         # find camera matrix
@@ -84,12 +90,12 @@ while (1):
         center = numpy.round(r.center).astype(int)
         center = tuple(center.ravel())
         # draw the axis of the tag
-        cv2.line(gray, center, tuple(ipoints[0].ravel()), (0, 0, 255), 2)
-        cv2.line(gray, center, tuple(ipoints[1].ravel()), (0, 255, 0), 2)
-        cv2.line(gray, center, tuple(ipoints[2].ravel()), (255, 0, 0), 2)
+        cv2.line(image, center, tuple(ipoints[0].ravel()), (0, 0, 255), 2)
+        cv2.line(image, center, tuple(ipoints[1].ravel()), (0, 255, 0), 2)
+        cv2.line(image, center, tuple(ipoints[2].ravel()), (255, 0, 0), 2)
         # draw the tag family on the image
         id_fam = str(r.tag_id)
-        cv2.putText(gray, id_fam, (ptA[0], ptA[1] - 15),
+        cv2.putText(image, id_fam, (ptA[0], ptA[1] - 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         # print the information about the tag: id, rotation, translation, center, corners, distance
@@ -104,13 +110,10 @@ while (1):
         # and send it to the client
         # rotation = r.pose_R
         # rot_quat = tf.transformations.quaternion_from_matrix(rotation)
-        cv2.imshow('Image', gray)
+    
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
-            break
+            cap.release()
+            cv2.destroyAllWindows()
     cv2.imshow('capture', frame)
-
-
-cap.release()
-cv2.destroyAllWindows()
