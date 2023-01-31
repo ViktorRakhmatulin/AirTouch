@@ -15,8 +15,9 @@ from models.networks import get_generator
 
 class Predictor:
     def __init__(self, weights_path: str, model_name: str = '', cuda: bool = True):
-        with open('config/config.yaml') as cfg:
-            config = yaml.load(cfg)
+        config_file_path = os.path.join(os.path.dirname(__file__),'./config/config.yaml')
+        with open(config_file_path) as cfg:
+            config = yaml.full_load(cfg)
         model = get_generator(model_name or config['model'], cuda= cuda)
         model.load_state_dict(torch.load(weights_path)['model']) if weights_path is not None else None
         self.model = model.module.cpu() if not cuda else model.cuda()
