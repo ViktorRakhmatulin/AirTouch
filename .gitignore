@@ -1,3 +1,4 @@
 .idea
 *.pyc
 .\Main part\YorkTag\
+.\Main part\ignore.txt
