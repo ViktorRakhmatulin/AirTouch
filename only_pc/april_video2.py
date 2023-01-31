@@ -7,16 +7,15 @@ import numpy
 import pupil_apriltags as apriltag
 import time
 from scipy.spatial.transform import Rotation as R
-import transforms3d as tf
-
+import transforms3d
 
 camera_params = (4.9989302084566577e+02, 5.0320386297363052e+02,
                  3.2668799142880744e+02, 2.3439979484610001e+02)
 tag_size = 0.0375
 
-#UDP_IP = "127.0.0.1"
-#UDP_PORT = 5065
-#sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+UDP_IP = "127.0.0.1"
+UDP_PORT = 5065
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 last = []
 cap = cv2.VideoCapture(0)
@@ -108,8 +107,18 @@ while (1):
         # print("")
         # store rotation matrix and translation vector, translate rotation matrix to quaternion, make string and send it to the client
         # and send it to the client
-        # rotation = r.pose_R
-        # rot_quat = tf.transformations.quaternion_from_matrix(rotation)
+        rotation = r.pose_R
+        rotation = numpy.round(rotation, 3)
+        rot_quat = transforms3d.quaternions.mat2quat(rotation)
+        translation = r.pose_t
+        translation = numpy.round(translation, 3)
+        translation = translation.ravel()
+        string = str(id_fam) + ' ' + str(rot_quat[0]) + ' ' + str(rot_quat[1]) + ' ' + str(rot_quat[2]) + ' ' + str(rot_quat[3]) + ' ' + str(translation[0]) + ' ' + str(translation[1]) + ' ' + str(translation[2])
+        # print(string)
+        # print("")
+        send_string = string.encode('utf-8')
+        sock.sendto(send_string, (UDP_IP, UDP_PORT))
+
     
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
