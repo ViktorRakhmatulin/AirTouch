@@ -1,3 +1,4 @@
 .idea
 *.pyc
 /Main_part/ignored.txt
+/Main_part/YorkTag/
