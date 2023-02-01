@@ -15,7 +15,7 @@ from models.networks import get_generator
 
 class Predictor:
     def __init__(self, weights_path: str, model_name: str = '', cuda: bool = True):
-        config_file_path = os.path.join(os.path.dirname(__file__),'./config/config.yaml')
+        config_file_path = os.path.join(os.path.dirname(__file__),'config\\config.yaml')
         with open(config_file_path) as cfg:
             config = yaml.full_load(cfg)
         model = get_generator(model_name or config['model'], cuda= cuda)
@@ -92,8 +92,8 @@ def process_video(pairs, predictor, output_dir):
 
 def main(img_pattern: str,
          mask_pattern: Optional[str] = None,
-         weights_path='best_fpn.h5',
-         out_dir='submit/',
+         weights_path=os.path.join(os.path.dirname(__file__),'trained_weights\\fpn_ghostnet_gm_hin.h5'),
+         out_dir=os.path.join(os.path.dirname(__file__),'submit\\'),
          side_by_side: bool = False,
          video: bool = False, cuda: bool= True):
     def sorted_glob(pattern):
