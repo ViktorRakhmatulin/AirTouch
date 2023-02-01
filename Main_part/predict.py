@@ -122,5 +122,17 @@ def main(img_pattern: str,
         process_video(pairs, predictor, out_dir)
 
 
+def rt_predict(img,weights_path=os.path.join(os.path.dirname(__file__),'trained_weights\\fpn_ghostnet_gm_hin.h5'
+                ),cuda = True,side_by_side = False):
+    predictor = Predictor(weights_path=weights_path, cuda=cuda)
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    mask = None
+    pred = predictor(img,mask)
+    if side_by_side:
+        pred = np.hstack((img,pred))
+    pred = cv2.cvtColor(pred,cv2.COLOR_RGB2BGR)
+
+    return pred
+
 if __name__ == '__main__':
     Fire(main)
