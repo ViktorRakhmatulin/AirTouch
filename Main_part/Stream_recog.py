@@ -8,6 +8,7 @@ import pupil_apriltags as apriltag
 import time
 from scipy.spatial.transform import Rotation as R
 import transforms3d
+import predict
 
 
 camera_params = (4.9989302084566577e+02, 5.0320386297363052e+02,
@@ -57,6 +58,7 @@ try:
         # processing on it
         image_stream.seek(0)
         image = Image.open(image_stream)
+        image = predict.rt_predict(image)
         opencvImage = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
         # Translate image to gray
         gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
