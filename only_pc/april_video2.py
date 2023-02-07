@@ -110,10 +110,11 @@ while (1):
         rotation = r.pose_R
         rotation = numpy.round(rotation, 3)
         rot_quat = transforms3d.quaternions.mat2quat(rotation)
+        rot_quat = numpy.round(rot_quat, 3)
         translation = r.pose_t
         translation = numpy.round(translation, 3)
         translation = translation.ravel()
-        string = str(id_fam) + ' ' + str(rot_quat[0]) + ' ' + str(rot_quat[1]) + ' ' + str(rot_quat[2]) + ' ' + str(rot_quat[3]) + ' ' + str(translation[0]) + ' ' + str(translation[1]) + ' ' + str(translation[2])
+        string = str(id_fam) + ',' + str(rot_quat[0]) + ',' + str(rot_quat[1]) + ',' + str(rot_quat[2]) + ',' + str(rot_quat[3]) + ',' + str(translation[0]) + ',' + str(translation[1]) + ',' + str(translation[2])
         # print(string)
         # print("")
         send_string = string.encode('utf-8')
