@@ -62,7 +62,9 @@ try:
         opencvImage = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
         # Translate image to gray
         gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
-        # cv2.imshow("gray", gray)
+        #blur = cv2.GaussianBlur(gray,(3,3),0)
+        #_,otsu = cv2.threshold(gray,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        cv2.imshow("gray", gray)
 
         # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
 
