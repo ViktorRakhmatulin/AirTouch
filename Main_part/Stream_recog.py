@@ -40,6 +40,9 @@ detector = apriltag.Detector(
     refine_edges=1,
     decode_sharpening=0.6,
     debug=0)
+
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('output.mp4',fourcc,30,(640,480))
 i = 0
 try:
     while True:
@@ -126,8 +129,8 @@ try:
             #print("[INFO] tag id: {}".format(id_fam))
             #print("Rotation: {}".format(r.pose_R))
             print("Translation: {}".format(r.pose_t))
-            cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],3)}\n {numpy.round(r.pose_t[1],3)}\n {numpy.round(r.pose_t[2],3)}", (ptA[0]+20, ptA[1] - 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            #cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],3)}\n {numpy.round(r.pose_t[1],3)}\n {numpy.round(r.pose_t[2],3)}", (ptA[0]+20, ptA[1] - 40),
+            #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
             #print("Distance: {}".format(distance))
@@ -147,7 +150,9 @@ try:
             # print("")
             send_string = string.encode('utf-8')
             sock.sendto(send_string, (UDP_IP, UDP_PORT))
+            
         cv2.imshow('Image', opencvImage)
+        out.write(opencvImage)
         image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
