@@ -82,13 +82,13 @@ try:
             ptD = (int(ptD[0]), int(ptD[1]))
             ptA = (int(ptA[0]), int(ptA[1]))
             # draw the bounding box of the AprilTag detection
-            cv2.line(opencvImage, ptA, ptB, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
-            cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
+            #cv2.line(opencvImage, ptA, ptB, (0, 255, 0), 2)
+            #cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
+            #cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
+            #cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
             # draw the center (x, y)-coordinates of the AprilTag
             (cX, cY) = (int(r.center[0]), int(r.center[1]))
-            cv2.circle(opencvImage, (cX, cY), 5, (0, 0, 255), -1)
+            #cv2.circle(opencvImage, (cX, cY), 5, (0, 0, 255), -1)
             # extract camera parameters
             fx, fy, cx, cy = camera_params
             # find camera matrix 
@@ -107,29 +107,31 @@ try:
             ipoints = numpy.round(ipoints).astype(int)
             # find distance between camera and tag
             
-            #april_distance = tag_size * fx / \
-            #    numpy.linalg.norm(ipoints[0] - ipoints[1])
-            #distance = round(april_distance, 2)
-            #cv2.putText(gray, str(distance), (ptA[0], ptA[1] - 30),
+            april_distance = tag_size * fx / \
+                numpy.linalg.norm(ipoints[0] - ipoints[1])
+            distance = round(april_distance, 2)
+            #cv2.putText(opencvImage, f'dist:{distance}', (ptA[0], ptA[1] - 30),
             #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
             # find the center of the tag
             center = numpy.round(r.center).astype(int)
             center = tuple(center.ravel())
             # draw the axis of the tag
-            cv2.line(opencvImage, center, tuple(ipoints[0].ravel()), (0, 0, 255), 2)
-            cv2.line(opencvImage, center, tuple(ipoints[1].ravel()), (0, 255, 0), 2)
-            cv2.line(opencvImage, center, tuple(ipoints[2].ravel()), (255, 0, 0), 2)
+            #cv2.line(opencvImage, center, tuple(ipoints[0].ravel()), (0, 0, 255), 2)
+            #cv2.line(opencvImage, center, tuple(ipoints[1].ravel()), (0, 255, 0), 2)
+            #cv2.line(opencvImage, center, tuple(ipoints[2].ravel()), (255, 0, 0), 2)
             # draw the tag family on the image
             id_fam = str(r.tag_id)
-            cv2.putText(gray, id_fam, (ptA[0], ptA[1] - 15),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            #cv2.putText(opencvImage, id_fam, (ptA[0], ptA[1] - 15),
+            #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
             # print the information about the tag: id, rotation, translation, center, corners, distance
             #print("[INFO] tag id: {}".format(id_fam))
             #print("Rotation: {}".format(r.pose_R))
             print("Translation: {}".format(r.pose_t))
-            #cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],3)}\n {numpy.round(r.pose_t[1],3)}\n {numpy.round(r.pose_t[2],3)}", (ptA[0]+20, ptA[1] - 40),
+            #cv2.putText(opencvImage, f"{numpy.round(r.pose_R[0],2)}\n {numpy.round(r.pose_R[1],2)}\n {numpy.round(r.pose_R[2],2)}", (ptA[0]+25, ptA[1] - 50),
+            #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            #cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],2)}\n {numpy.round(r.pose_t[1],2)}\n {numpy.round(r.pose_t[2],2)}", (ptA[0]+25, ptA[1] - 45),
             #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
@@ -148,6 +150,8 @@ try:
             string = str(id_fam) + ' ' + str(rot_quat[0]) + ' ' + str(rot_quat[1]) + ' ' + str(rot_quat[2]) + ' ' + str(rot_quat[3]) + ' ' + str(translation[0]) + ' ' + str(translation[1]) + ' ' + str(translation[2])
             # print(string)
             # print("")
+            #cv2.putText(opencvImage, f"quat:{numpy.round(rot_quat,2)}", (ptA[0]+25, ptA[1] - 50),
+            #                cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 2)
             send_string = string.encode('utf-8')
             sock.sendto(send_string, (UDP_IP, UDP_PORT))
             
