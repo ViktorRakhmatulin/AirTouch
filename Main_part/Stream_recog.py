@@ -8,11 +8,10 @@ import pupil_apriltags as apriltag
 import time
 from scipy.spatial.transform import Rotation as R
 import transforms3d
-import predict
 
 
-camera_params = (4.9989302084566577e+02, 5.0320386297363052e+02,
-                 3.2668799142880744e+02, 2.3439979484610001e+02)
+camera_params = (506.19083684, 508.36108854,
+                 317.93111342, 243.12403806)
 tag_size = 0.0375
 
 UDP_IP = "127.0.0.1"
@@ -156,7 +155,8 @@ try:
             sock.sendto(send_string, (UDP_IP, UDP_PORT))
             
         cv2.imshow('Image', opencvImage)
-        out.write(opencvImage)
+        cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
+        #out.write(opencvImage)
         image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
