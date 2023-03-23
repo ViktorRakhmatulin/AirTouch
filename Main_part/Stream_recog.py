@@ -129,9 +129,10 @@ try:
             #print("Rotation: {}".format(r.pose_R))
             print("Translation: {}".format(r.pose_t))
             #cv2.putText(opencvImage, f"{numpy.round(r.pose_R[0],2)}\n {numpy.round(r.pose_R[1],2)}\n {numpy.round(r.pose_R[2],2)}", (ptA[0]+25, ptA[1] - 50),
-            #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            #cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],2)}\n {numpy.round(r.pose_t[1],2)}\n {numpy.round(r.pose_t[2],2)}", (ptA[0]+25, ptA[1] - 45),
-            #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                        # cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],2)}\n {numpy.round(r.pose_t[1],2)}\n {numpy.round(r.pose_t[2],2)}", (ptA[0]+25, ptA[1] - 45),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            print(r.pose_t)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
             #print("Distance: {}".format(distance))
