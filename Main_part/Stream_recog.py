@@ -155,7 +155,7 @@ try:
             sock.sendto(send_string, (UDP_IP, UDP_PORT))
             
         cv2.imshow('Image', opencvImage)
-        cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
+        #cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
         #out.write(opencvImage)
         image.verify()
 #        print('Image is verified')

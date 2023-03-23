@@ -84,7 +84,7 @@ def main():
 
             # Display the window for a short period. Used for testing.
 #            cv2.waitKey(1000)
-    print("Chessboard images processed")
+    print(f"Chessboard images processed,length = {len(object_points)}")
     input("Press Enter to continue...")
             # Perform camera calibration to return the camera matrix, distortion coefficients, rotation and translation vectors etc
     ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(object_points,
