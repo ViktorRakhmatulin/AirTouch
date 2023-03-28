@@ -158,7 +158,7 @@ try:
             
         cv2.imshow('Image', opencvImage)
         #cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
-        out.write(opencvImage)
+        #out.write(opencvImage)
         image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
