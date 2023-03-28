@@ -41,7 +41,7 @@ detector = apriltag.Detector(
     debug=0)
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter('output.mp4',fourcc,30,(640,480))
+out = cv2.VideoWriter('measuring_distance.mp4',fourcc,30,(640,480))
 i = 0
 try:
     while True:
@@ -130,8 +130,9 @@ try:
             print("Translation: {}".format(r.pose_t))
             #cv2.putText(opencvImage, f"{numpy.round(r.pose_R[0],2)}\n {numpy.round(r.pose_R[1],2)}\n {numpy.round(r.pose_R[2],2)}", (ptA[0]+25, ptA[1] - 50),
                         # cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(opencvImage, f"{numpy.round(r.pose_t[0],2)}\n {numpy.round(r.pose_t[1],2)}\n {numpy.round(r.pose_t[2],2)}", (ptA[0]+25, ptA[1] - 45),
+            cv2.putText(opencvImage, f"x,y,z: {numpy.round(r.pose_t[0,0],2)} {numpy.round(r.pose_t[1,0],2)} {numpy.round(r.pose_t[2,0],2)}", (ptA[0]+25, ptA[1] - 45),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.putText(opencvImage,f'Distance: {numpy.linalg.norm(r.pose_t):.2f}',(ptA[0]+40, ptA[1] - 65),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             print(r.pose_t)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
@@ -157,7 +158,7 @@ try:
             
         cv2.imshow('Image', opencvImage)
         #cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
-        #out.write(opencvImage)
+        out.write(opencvImage)
         image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
