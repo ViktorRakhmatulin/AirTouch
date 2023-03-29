@@ -14,22 +14,6 @@ camera_params = (506.19083684, 508.36108854,
                  317.93111342, 243.12403806)
 tag_size = 0.0375
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5065
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-last = []
-
-print('Begin')
-# Start a socket listening for connections on 0.0.0.0:8000 (0.0.0.0 means
-# all interfaces)
-server_socket = socket.socket()
-server_socket.bind(('0.0.0.0', 8000))
-server_socket.listen(0)
-print('Here')
-# Accept a single connection and make a file-like object out of it
-connection = server_socket.accept()[0].makefile('rb')
-print('Before trying')
 # Initializing detector
 detector = apriltag.Detector(
     families='tag36h11',
@@ -43,25 +27,13 @@ detector = apriltag.Detector(
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('measuring_distance.mp4',fourcc,30,(640,480))
 i = 0
+cap = cv2.VideoCapture(0)
 try:
     while True:
         # Read the length of the image as a 32-bit unsigned int. If the
         # length is zero, quit the loop
-        print('to unpack')
-        image_len = struct.unpack(
-            '<L', connection.read(struct.calcsize('<L')))[0]
-        print('I am here')
-        if not image_len:
-            break
-        # Construct a stream to hold the image data and read the image
-        # data from the connection
-        image_stream = io.BytesIO()
-        image_stream.write(connection.read(image_len))
-        # Rewind the stream, open it as an image with PIL and do some
-        # processing on it
-        image_stream.seek(0)
-        image = Image.open(image_stream)
-        opencvImage = cv2.cvtColor(numpy.array(image), cv2.COLOR_RGB2BGR)
+
+        ret,opencvImage = cap.read()
         # Translate image to gray
         gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
         #blur = cv2.GaussianBlur(gray,(3,3),0)
@@ -154,18 +126,15 @@ try:
             #cv2.putText(opencvImage, f"quat:{numpy.round(rot_quat,2)}", (ptA[0]+25, ptA[1] - 50),
             #                cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 255, 0), 2)
             send_string = string.encode('utf-8')
-            sock.sendto(send_string, (UDP_IP, UDP_PORT))
             
         cv2.imshow('Image', opencvImage)
         #cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
         #out.write(opencvImage)
-        image.verify()
+        #image.verify()
 #        print('Image is verified')
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
         i += 1
 finally:
-    connection.close()
     print('Closing')
-    server_socket.close()
