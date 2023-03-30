@@ -6,7 +6,7 @@ void setup() {
   // put your setup code here, to run once:
     pinMode(PIN_RELAY,OUTPUT);
     Serial.begin(9600);
-    Serial.setTimeout(0);
+    Serial.setTimeout(50);
     digitalWrite(PIN_RELAY,LOW);
     Serial.println("pin zanizhen don");
 
@@ -21,8 +21,9 @@ void loop() {
       digitalWrite(PIN_RELAY, HIGH);
       Serial.println("YOU SHALL NOT PASS");
     }
-    else if (status == 0)
+    else if (status == 0){
     digitalWrite(PIN_RELAY,LOW);
     Serial.println("PROHODI NE ZADERZHIVAYSYA");
+    }
   }
 }

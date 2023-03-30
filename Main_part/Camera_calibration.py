@@ -75,7 +75,7 @@ def main():
 
             # Draw the corners
             cv2.drawChessboardCorners(image, (nY, nX), corners_2, success)
-            if i % 50 == 0:
+            if i % 40 == 0:
                 cv2.imshow("Image", image)
                 cv2.waitKey(500)
             i+=1
