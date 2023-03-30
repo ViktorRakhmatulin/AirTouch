@@ -1,4 +1,5 @@
 {
     "board": "arduino:avr:uno",
-    "sketch": "Main_part\\fan_control.ino"
+    "sketch": "Main_part\\fan_control.ino",
+    "port": "COM7"
 }
