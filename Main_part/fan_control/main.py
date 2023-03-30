@@ -12,6 +12,8 @@ class ArduApp(QtWidgets.QMainWindow, design.Ui_Form):
         self.setupUi(self)
         self.Port.addItems(serial_ports())
         self.Speed.addItems(speeds)
+        self.Ports = serial_ports()
+        self.Speeds = speeds
         self.realport = None
         self.ConnectButton.clicked.connect(self.connect)
         self.EnableBtn.clicked.connect(self.send)
