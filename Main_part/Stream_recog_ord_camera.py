@@ -10,8 +10,8 @@ from scipy.spatial.transform import Rotation as R
 import transforms3d
 
 
-camera_params = (506.19083684, 508.36108854,
-                 317.93111342, 243.12403806)
+camera_params = (603.12192992, 605.38959647,
+                 337.64128438, 255.81680916)
 tag_size = 0.0375
 
 # Initializing detector
@@ -27,7 +27,7 @@ detector = apriltag.Detector(
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('measuring_distance.mp4',fourcc,30,(640,480))
 i = 0
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 try:
     while True:
         # Read the length of the image as a 32-bit unsigned int. If the
@@ -102,9 +102,9 @@ try:
             print("Translation: {}".format(r.pose_t))
             #cv2.putText(opencvImage, f"{numpy.round(r.pose_R[0],2)}\n {numpy.round(r.pose_R[1],2)}\n {numpy.round(r.pose_R[2],2)}", (ptA[0]+25, ptA[1] - 50),
                         # cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(opencvImage, f"x,y,z: {numpy.round(r.pose_t[0,0],2)} {numpy.round(r.pose_t[1,0],2)} {numpy.round(r.pose_t[2,0],2)}", (ptA[0]+25, ptA[1] - 45),
+            cv2.putText(opencvImage, f"x,y,z: {numpy.round(r.pose_t[0,0],3)} {numpy.round(r.pose_t[1,0],3)} {numpy.round(r.pose_t[2,0],3)}", (ptA[0]+25, ptA[1] - 45),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.putText(opencvImage,f'Distance: {numpy.linalg.norm(r.pose_t):.2f}',(ptA[0]+40, ptA[1] - 65),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.putText(opencvImage,f'Distance: {numpy.linalg.norm(r.pose_t):.3f}',(ptA[0]+40, ptA[1] - 65),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             print(r.pose_t)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
@@ -128,7 +128,7 @@ try:
             send_string = string.encode('utf-8')
             
         cv2.imshow('Image', opencvImage)
-        #cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
+        # cv2.imwrite(f'.\calibration\{i}.png',opencvImage)
         #out.write(opencvImage)
         #image.verify()
 #        print('Image is verified')
