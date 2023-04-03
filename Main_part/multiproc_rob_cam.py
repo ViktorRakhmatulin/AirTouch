@@ -72,15 +72,16 @@ def image_process(conn):
                 rvec = r.pose_R
 
                 # print(r.pose_t)
-
-                april_distance = np.linalg.norm(r.pose_t)
+                
+                #Change it
+                '''april_distance = np.linalg.norm(r.pose_t)
                 if (april_distance < 0.2 and arduino_state == 0):
                     arduino_state = 1
                     arduino.write(b'1')
                     conn.send(1)
                 elif (april_distance > 0.2 and arduino_state == 1):
                     arduino_state = 0
-                    arduino.write(b'0')
+                    arduino.write(b'0')'''
 
                 dcoeffs = np.zeros(5)
                 # find object points of the tag 
@@ -112,32 +113,6 @@ def image_process(conn):
         print('Closing')
         conn.close()
 
-def manip_control(conn,goal,home):
-    rob = urx.Robot('192.168.88.60')
-    print('Robot connected')
-    accuracy = 0.002
-    print("manip_control process started")
-    # rob.movel(goal)
-    while True:
-        current_rob_pose = rob.getl()
-        
-        diff = -np.array(current_rob_pose[:3])+np.array(goal[:3])
-        
-        distance = np.linalg.norm(diff)
-        
-        if distance <= accuracy:
-            rob.movel(goal)
-            # rob.speedl((0,0,0,0,0,0),0.05,1)
-
-        v = diff/np.max(np.abs(diff))*0.01
-        rob.speedl((v[0],v[1],v[2],0,0,0),0.05,1)
-
-        print(conn.poll())
-        if conn.poll() == 1:
-            print('Recieved collision')
-            rob.speedl((0,0,0,0,0,0),0.05,1)
-            rob.movel((home[0],home[1],home[2],home[3],home[4],home[5]),0.01,0.01)
-            break
 
 def manip_control_non_stop(waypoints):
     current_joints = []
@@ -168,8 +143,7 @@ def main():
         t4 = [0.872,-0.0328,0.501,0.62,-4.2,1.5]
         waypoints = [home,goal,t3,t4,goal]
         # parent,child = mp.Pipe()
-        # im_proc = mp.Process(target=image_process,args=(parent,))
-        # manip_proc = mp.Process(target=manip_control,args=(child,goal,home))
+        # im_proc = mp.Process(target=image_process,args=(parent,))s
         manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints,))
         # im_proc.start()
         manip_proc.start()
