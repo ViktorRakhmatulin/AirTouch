@@ -1,11 +1,6 @@
 {
     "board": "arduino:avr:uno",
-<<<<<<< HEAD
-    "sketch": "Main_part\\fan_control.ino",
-    "port": "COM7"
-=======
     "sketch": "Main_part\\fan_control\\fan_control.ino",
     "port": "COM6",
     "programmer": "arduinoisp"
->>>>>>> cc2b931622a64ef09409c4c1170fa5e3dc96635a
 }

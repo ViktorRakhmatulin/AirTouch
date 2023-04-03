@@ -15,8 +15,8 @@ from port import serial_ports,speeds
 import serial
 
 
-camera_params = (506.19083684, 508.36108854,
-                 317.93111342, 243.12403806)
+camera_params = (603.12192992, 605.38959647,
+                337.64128438, 255.81680916)
 tag_size = 0.0375
 
 class ArduCon():
