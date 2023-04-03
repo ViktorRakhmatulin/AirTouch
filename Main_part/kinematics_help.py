@@ -34,6 +34,9 @@ T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
 
 T03 = np.dot(T01, T12)
 T03 = np.dot(T03, T23)
+print(T03)
+Tmat = T01 @ T12 @ T23
+print(Tmat)
 
 #Coordinates of the end effector:
 X_ee = np.array([T03[0,3],T03[1,3], T03[2,3]])
@@ -44,4 +47,4 @@ Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
                      [0,0,0,1]])
 
 X_cb = np.dot(Tcb_hand, T03)
-print(X_cb)
+#print(X_cb)

@@ -8,7 +8,64 @@ collections.Iterable = collections.abc.Iterable
 import time
 import serial
 
-def image_process(conn):
+def transform_matrix(theta, a, d, alpha):
+    '''Function for transform matrix'''
+    T = np.array([[np.cos(theta), -np.sin(theta)*np.cos(alpha), np.sin(theta)*np.sin(alpha), a*np.cos(theta)],
+                  [np.sin(theta), np.cos(theta)*np.cos(alpha), -np.cos(theta)*np.sin(alpha), a*np.sin(theta)],
+                  [0, np.sin(alpha), np.cos(alpha), d],
+                  [0, 0, 0, 1]])
+    return T
+
+def coordinate_systems_transform(angles, x_ee):
+    '''This function calculates coordinates of the end-effector in camera coordinate system.
+    Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
+    end-effector in base frame, transform matrix from base to camera frame
+    (since we want to avoid computing inverse matrix from camera to base frame)
+    and  then end-effector coordinates in camera frame.
+    Input: angles (recieved from mp.Pipe from manipulator process), connection variable from mp.Pipe()
+    Output: end-effector coordinates in camera frame. 
+    Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
+    
+    '''
+    theta = np.array([angles[0], angles[1], angles[2]])
+    a = np.array([0, -0.612, -0.5723/2])     # Link lengths
+    alpha = np.array([np.pi/2, 0, 0]) # Twist angles
+    d = np.array([0.1273, 0, 0])     # Link offsets
+
+    #Define the extrinsic parameters of the camera
+    cam_pos = np.array([0.1, 0.1, 0.1]) # Camera position
+    cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
+
+    #Calculate transform matrix for each joint
+    T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
+
+    T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
+
+    T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
+
+    #Calculate transform from end-effector to base frame coordinate system
+    T03 = T01 @ T12 @ T23
+
+    X_ee = np.array([T03[0,3],T03[1,3], T03[2,3]])
+
+    Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
+                     [0,0,1,-0.1],
+                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,0],
+                     [0,0,0,1]])
+
+    X_cb = np.dot(Tcb_hand, T03)
+
+    X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
+    
+    x_ee.send(X_cb)
+    #print(X_cb)
+
+def image_process(x_ee):
+    '''
+    Input: end effector coordinates.
+    Output: xD
+    
+    '''
     camera_params = (603.12192992, 605.38959647,
                     337.64128438, 255.81680916)
     tag_size = 0.0375
@@ -43,10 +100,11 @@ def image_process(conn):
 
             results = detector.detect(
                 gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
-            
-            if not results and arduino_state == 1:
+            #change
+
+            '''if not results and arduino_state == 1:
                 arduino_state = 0
-                arduino.write(b'0') 
+                arduino.write(b'0') '''
     #        print("[INFO] {} total AprilTags detected".format(len(results)))
             for r in results:
                 # extract the bounding box (x, y)-coordinates for the AprilTag
@@ -72,7 +130,13 @@ def image_process(conn):
                 rvec = r.pose_R
 
                 # print(r.pose_t)
-                
+
+                '''
+                HERE WE CALCULATE THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
+                '''
+                #if x_ee.recv():
+                #    x_end = np.array
+
                 #Change it
                 '''april_distance = np.linalg.norm(r.pose_t)
                 if (april_distance < 0.2 and arduino_state == 0):
@@ -111,7 +175,7 @@ def image_process(conn):
                 
     finally:
         print('Closing')
-        conn.close()
+        x_ee.close()
 
 
 def manip_control_non_stop(waypoints):
@@ -127,6 +191,7 @@ def manip_control_non_stop(waypoints):
         rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         while True:
             current_joints = rob.getj()
+
             print(current_joints)
             time.sleep(0.1)
             if not rob.is_program_running():
