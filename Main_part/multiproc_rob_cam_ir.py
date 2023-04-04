@@ -269,7 +269,7 @@ def main():
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
         angles_send, angles_rec = mp.Pipe()
-        coord_send, coord_rec = mp.Pipe()
+        coord_send, coord_rec = mp.Pipr()
         manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
         coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
         im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,))
