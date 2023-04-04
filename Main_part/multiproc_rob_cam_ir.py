@@ -31,39 +31,39 @@ def coordinate_systems_transform(angles_rec, x_ee):
     Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
     
     '''
-    if angles_rec.recv():
-        angles = angles_rec
-        theta = np.array([angles[0], angles[1], angles[2]])
-        a = np.array([0, -0.612, -0.5723/2])     # Link lengths
-        alpha = np.array([np.pi/2, 0, 0]) # Twist angles
-        d = np.array([0.1273, 0, 0])     # Link offsets
+    while True:
+        angles = angles_rec.recv()
+        if angles.any():
+            theta = np.array([angles[0], angles[1], angles[2]])
+            a = np.array([0, -0.612, -0.5723/2])     # Link lengths
+            alpha = np.array([np.pi/2, 0, 0]) # Twist angles
+            d = np.array([0.1273, 0, 0])     # Link offsets
 
-        #Define the extrinsic parameters of the camera
-        cam_pos = np.array([0.0, 0.4, 0.54]) # Camera position
-        cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
+            #Define the extrinsic parameters of the camera
+            cam_pos = np.array([0.0, 0.4, 0.54]) # Camera position
+            cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
 
-        #Calculate transform matrix for each joint
-        T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
+            #Calculate transform matrix for each joint
+            T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
 
-        T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
+            T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
 
-        T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
+            T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
 
-        #Calculate transform from end-effector to base frame coordinate system
-        T03 = T01 @ T12 @ T23
+            #Calculate transform from end-effector to base frame coordinate system
+            T03 = T01 @ T12 @ T23
 
-        Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
-                     [0,0,1,-cam_pos[2]],
-                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2(-cam_pos[0]+cam_pos[1])],
-                     [0,0,0,1]])
+            Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
+                        [0,0,1,-cam_pos[2]],
+                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2*(-cam_pos[0]+cam_pos[1])],
+                        [0,0,0,1]])
 
-        X_cb = np.dot(Tcb_hand, T03)
+            X_cb = np.dot(Tcb_hand, T03)
 
-        X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
-        print(f'TRANSFORM END-EFFECTOR: {X_cb}')
-        
-        x_ee.send(X_cb)
-        #print(X_cb)
+            X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
+            
+            x_ee.send(X_cb)
+            #print(X_cb)
 
 def arduino_theta_control(coord_variable):
     #arduino = serial.Serial('COM6',9600)
@@ -71,10 +71,12 @@ def arduino_theta_control(coord_variable):
         
 
         #arduino_state = 0
-        if coord_variable.recv():
-            x_end = coord_variable[0]
-            marker = coord_variable[1]
+        coord = coord_variable.recv()
+        if coord:
+            x_end = coord[0]
+            marker = coord[1].ravel()
             ee_to_marker = marker - x_end
+
             cos_alpha = np.dot(x_end, marker) / (np.linalg.norm(x_end)*np.linalg.norm(marker))
             sin_alpha = np.sqrt(1 - np.power(cos_alpha,2))
             cos_pitheta = np.dot(ee_to_marker, marker) / (np.linalg.norm(ee_to_marker)*np.linalg.norm(marker))
@@ -84,8 +86,9 @@ def arduino_theta_control(coord_variable):
             theta = np.rad2deg(theta)
             theta = int(theta)
             #arduino.write(f'go to {theta:03}')
-            print(f'Я выпил {theta:03} бутылок пива')
             distance = np.linalg.norm(marker - x_end)
+            print(f'Я выпил {theta:03} бутылок пива по цене {distance:.3f}')
+            
             if distance < 0.2:
                 #arduino.write('that turns me on')
                 print('that turns me on')
@@ -184,8 +187,8 @@ def image_process(x_ee, coord_variable):
                 '''
                 x_end = x_ee.recv()
                 
-                if x_end:
-                    coord_variable.send((x_ee, r.pose_t))
+                if x_end.any():
+                    coord_variable.send((x_end, r.pose_t))
 
 
                 #Change it
@@ -241,7 +244,7 @@ def manip_control_non_stop(waypoints,angles_send):
     '''
     current_joints = []
     rob = urx.Robot('192.168.88.139')
-    rob.movel(waypoints[0])
+    # rob.movel(waypoints[0])
     print('Robot connected')
     print("manip_control process started")
     # rob.movel(goal)
@@ -269,7 +272,7 @@ def main():
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
         angles_send, angles_rec = mp.Pipe()
-        coord_send, coord_rec = mp.Pipr()
+        coord_send, coord_rec = mp.Pipe()
         manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
         coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
         im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,))
