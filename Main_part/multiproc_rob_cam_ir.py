@@ -39,7 +39,7 @@ def coordinate_systems_transform(angles_rec, x_ee):
         d = np.array([0.1273, 0, 0])     # Link offsets
 
         #Define the extrinsic parameters of the camera
-        cam_pos = np.array([0.1, 0.1, 0.1]) # Camera position
+        cam_pos = np.array([0.0, 0.4, 0.54]) # Camera position
         cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
 
         #Calculate transform matrix for each joint
@@ -52,10 +52,10 @@ def coordinate_systems_transform(angles_rec, x_ee):
         #Calculate transform from end-effector to base frame coordinate system
         T03 = T01 @ T12 @ T23
 
-        Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
-                        [0,0,1,-0.1],
-                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,0],
-                        [0,0,0,1]])
+        Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
+                     [0,0,1,-cam_pos[2]],
+                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2(-cam_pos[0]+cam_pos[1])],
+                     [0,0,0,1]])
 
         X_cb = np.dot(Tcb_hand, T03)
 
