@@ -105,7 +105,6 @@ def image_process(x_ee, coord_variable):
     server_socket = socket.socket()
     server_socket.bind(('0.0.0.0', 8000))
     server_socket.listen(0)
-    print('Here')
     # Accept a single connection and make a file-like object out of it
     connection = server_socket.accept()[0].makefile('rb')
     print('Before trying')
@@ -125,10 +124,8 @@ def image_process(x_ee, coord_variable):
         while True:
             # Read the length of the image as a 32-bit unsigned int. If the
             # length is zero, quit the loop
-            print('to unpack')
             image_len = struct.unpack(
                 '<L', connection.read(struct.calcsize('<L')))[0]
-            print('I am here')
             if not image_len:
                 break
             # Construct a stream to hold the image data and read the image
@@ -272,7 +269,7 @@ def main():
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
         angles_send, angles_rec = mp.Pipe()
-        coord_send, coord_rec = mp.Pipr()
+        coord_send, coord_rec = mp.Pipe()
         manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
         coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
         im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,))
