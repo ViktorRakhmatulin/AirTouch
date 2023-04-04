@@ -56,11 +56,39 @@ def coordinate_systems_transform(angles_rec, x_ee):
         X_cb = np.dot(Tcb_hand, T03)
 
         X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
+        print(f'TRANSFORM END-EFFECTOR: {X_cb}')
         
         x_ee.send(X_cb)
         #print(X_cb)
 
-def image_process(x_ee):
+def arduino_theta_control(coord_variable):
+    #arduino = serial.Serial('COM6',9600)
+    while True:
+        
+
+        #arduino_state = 0
+        if coord_variable.recv():
+            x_end = coord_variable[0]
+            marker = coord_variable[1]
+            ee_to_marker = marker - x_end
+            cos_alpha = np.dot(x_end, marker) / (np.linalg.norm(x_end)*np.linalg.norm(marker))
+            sin_alpha = np.sqrt(1 - np.power(cos_alpha,2))
+            cos_pitheta = np.dot(ee_to_marker, marker) / (np.linalg.norm(ee_to_marker)*np.linalg.norm(marker))
+            cos_theta = -cos_pitheta
+            sin_theta = np.linalg.norm(marker) * sin_alpha / np.linalg.norm(ee_to_marker)
+            theta = np.arctan2(sin_theta, cos_theta)
+            theta = np.rad2deg(theta)
+            theta = int(theta)
+            #arduino.write(f'go to {theta:03}')
+            print(f'Я выпил {theta:03} бутылок пива')
+            distance = np.linalg.norm(marker - x_end)
+            if distance < 0.2:
+                #arduino.write('that turns me on')
+                print('that turns me on')
+
+
+
+def image_process(x_ee, coord_variable):
     '''
     Input: end effector coordinates.
     Output: xD
@@ -79,9 +107,6 @@ def image_process(x_ee):
         refine_edges=1,
         decode_sharpening=0.6,
         debug=0)
-    arduino = serial.Serial('COM6',9600)
-
-    arduino_state = 0
     
     cap = cv2.VideoCapture(0)
     try:
@@ -106,7 +131,8 @@ def image_process(x_ee):
                 arduino_state = 0
                 arduino.write(b'0') '''
     #        print("[INFO] {} total AprilTags detected".format(len(results)))
-            for r in results:
+            if results:
+                r = results[0]
                 # extract the bounding box (x, y)-coordinates for the AprilTag
                 (ptA, ptB, ptC, ptD) = r.corners
                 ptB = (int(ptB[0]), int(ptB[1]))
@@ -132,10 +158,13 @@ def image_process(x_ee):
                 # print(r.pose_t)
 
                 '''
-                HERE WE CALCULATE THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
+                HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
                 '''
-                #if x_ee.recv():
-                #    x_end = np.array
+                x_end = x_ee.recv()
+                
+                if x_end:
+                    coord_variable.send((x_ee, r.pose_t))
+
 
                 #Change it
                 '''april_distance = np.linalg.norm(r.pose_t)
@@ -202,8 +231,6 @@ def manip_control_non_stop(waypoints,angles_send):
             current_joints = rob.getj()
             angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
             angles_send.send(angles)
-
-            print(current_joints)
             time.sleep(0.1)
             if not rob.is_program_running():
                 break
@@ -220,16 +247,21 @@ def main():
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
         angles_send, angles_rec = mp.Pipe()
-        im_proc = mp.Process(target=image_process,args=(xee_rec,))
+        coord_send, coord_rec = mp.Pipr()
         manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
         coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
-        im_proc.start()
-        coord_proc.start()
+        im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,))
+        arduino_proc = mp.Process(tarhet = arduino_theta_control, args = (coord_rec,))
         manip_proc.start()
+        coord_proc.start()
+        im_proc.start()
+        arduino_proc.start()
+
     finally:
         manip_proc.join()
         im_proc.join()
         coord_proc.join()
+        arduino_proc.join()
 
 if __name__ == '__main__':
     main()
