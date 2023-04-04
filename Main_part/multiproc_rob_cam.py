@@ -16,7 +16,7 @@ def transform_matrix(theta, a, d, alpha):
                   [0, 0, 0, 1]])
     return T
 
-def coordinate_systems_transform(angles, x_ee):
+def coordinate_systems_transform(angles_rec, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
     Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
     end-effector in base frame, transform matrix from base to camera frame
@@ -27,38 +27,38 @@ def coordinate_systems_transform(angles, x_ee):
     Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
     
     '''
-    theta = np.array([angles[0], angles[1], angles[2]])
-    a = np.array([0, -0.612, -0.5723/2])     # Link lengths
-    alpha = np.array([np.pi/2, 0, 0]) # Twist angles
-    d = np.array([0.1273, 0, 0])     # Link offsets
+    if angles_rec.recv():
+        angles = angles_rec
+        theta = np.array([angles[0], angles[1], angles[2]])
+        a = np.array([0, -0.612, -0.5723/2])     # Link lengths
+        alpha = np.array([np.pi/2, 0, 0]) # Twist angles
+        d = np.array([0.1273, 0, 0])     # Link offsets
 
-    #Define the extrinsic parameters of the camera
-    cam_pos = np.array([0.1, 0.1, 0.1]) # Camera position
-    cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
+        #Define the extrinsic parameters of the camera
+        cam_pos = np.array([0.1, 0.1, 0.1]) # Camera position
+        cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
 
-    #Calculate transform matrix for each joint
-    T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
+        #Calculate transform matrix for each joint
+        T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
 
-    T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
+        T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
 
-    T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
+        T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
 
-    #Calculate transform from end-effector to base frame coordinate system
-    T03 = T01 @ T12 @ T23
+        #Calculate transform from end-effector to base frame coordinate system
+        T03 = T01 @ T12 @ T23
 
-    X_ee = np.array([T03[0,3],T03[1,3], T03[2,3]])
+        Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
+                        [0,0,1,-0.1],
+                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,0],
+                        [0,0,0,1]])
 
-    Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
-                     [0,0,1,-0.1],
-                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,0],
-                     [0,0,0,1]])
+        X_cb = np.dot(Tcb_hand, T03)
 
-    X_cb = np.dot(Tcb_hand, T03)
-
-    X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
-    
-    x_ee.send(X_cb)
-    #print(X_cb)
+        X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
+        
+        x_ee.send(X_cb)
+        #print(X_cb)
 
 def image_process(x_ee):
     '''
@@ -178,7 +178,16 @@ def image_process(x_ee):
         x_ee.close()
 
 
-def manip_control_non_stop(waypoints):
+def manip_control_non_stop(waypoints,angles_send):
+    '''
+    This function is used for controlling the UR10 robot movement. Here we just move it along precalculated trajectory.
+    Since we have our manipulator connection and control here, this function is also sending joint angles for further 
+    impaler position in camera frame (function coordinate_systems_transform()).
+
+    Input: trajectory (waypoints), angles_send (mp.Pipe() variable used for sending angles).
+    Output: manipulator control, joint angles array.
+    
+    '''
     current_joints = []
     rob = urx.Robot('192.168.88.139')
     rob.movel(waypoints[0])
@@ -191,6 +200,8 @@ def manip_control_non_stop(waypoints):
         rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         while True:
             current_joints = rob.getj()
+            angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
+            angles_send.send(angles)
 
             print(current_joints)
             time.sleep(0.1)
@@ -207,14 +218,18 @@ def main():
         t3 = [0.847,-0.147,0.485,1.793,-4.293,0.623]
         t4 = [0.872,-0.0328,0.501,0.62,-4.2,1.5]
         waypoints = [home,goal,t3,t4,goal]
-        # parent,child = mp.Pipe()
-        # im_proc = mp.Process(target=image_process,args=(parent,))s
-        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints,))
-        # im_proc.start()
+        xee_send, xee_rec = mp.Pipe()
+        angles_send, angles_rec = mp.Pipe()
+        im_proc = mp.Process(target=image_process,args=(xee_rec,))
+        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
+        coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
+        im_proc.start()
+        coord_proc.start()
         manip_proc.start()
     finally:
         manip_proc.join()
-        # im_proc.join()
+        im_proc.join()
+        coord_proc.join()
 
 if __name__ == '__main__':
     main()
