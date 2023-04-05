@@ -11,6 +11,7 @@ import serial
 import socket
 import io
 from PIL import Image
+import keyboard
 
 def transform_matrix(theta, a, d, alpha):
     '''Function for transform matrix for all manipulator related stuff'''
@@ -20,6 +21,7 @@ def transform_matrix(theta, a, d, alpha):
                   [0, 0, 0, 1]])
     return T
 
+<<<<<<< HEAD
 def camera_base_transform_matrix(trans_coord, cam_rot, order):
     '''
     This function calculates transform matrix for 3 rotations (1 for each axis), and then calculates inverse matrix (we must use it in our case. 
@@ -77,14 +79,20 @@ def coordinate_systems_transform(angles_rec, x_ee):
             x_ee.send(X_cb)
             #print(X_cb)
 
+=======
+>>>>>>> 8d784682f40a80e668d697112fb4b2d3ac154510
 def arduino_theta_control(coord_variable):
+    print('arduino process started')
+
     #arduino = serial.Serial('COM6',9600)
+    
     while True:
         
 
         #arduino_state = 0
-        coord = coord_variable.recv()
-        if coord:
+        
+        if coord_variable.poll():
+            coord = coord_variable.recv()
             x_end = coord[0]
             marker = coord[1].ravel()
             ee_to_marker = marker - x_end
@@ -99,11 +107,12 @@ def arduino_theta_control(coord_variable):
             theta = int(theta)
             #arduino.write(f'go to {theta:03}')
             distance = np.linalg.norm(marker - x_end)
-            print(f'Я выпил {theta:03} бутылок пива по цене {distance:.3f}')
+            # print(f'Я выпил {theta:03} бутылок пива по цене {distance:.3f}')
             
             if distance < 0.2:
+                pass
                 #arduino.write('that turns me on')
-                print('that turns me on')
+                # print('that turns me on')
 
 
 
@@ -113,6 +122,7 @@ def image_process(x_ee, coord_variable):
     Output: xD
     
     '''
+    print('Image processing process started')
     camera_params = (506.19083684, 508.36108854,
                  317.93111342, 243.12403806)
     tag_size = 0.0375
@@ -197,9 +207,9 @@ def image_process(x_ee, coord_variable):
                 '''
                 HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
                 '''
-                x_end = x_ee.recv()
-                
-                if x_end.any():
+
+                if x_ee.poll():
+                    x_end = x_ee.recv()
                     coord_variable.send((x_end, r.pose_t))
 
 
@@ -243,6 +253,52 @@ def image_process(x_ee, coord_variable):
         print('Closing')
         x_ee.close()
 
+def coordinate_systems_transform(angles_rec, x_ee):
+    '''This function calculates coordinates of the end-effector in camera coordinate system.
+    Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
+    end-effector in base frame, transform matrix from base to camera frame
+    (since we want to avoid computing inverse matrix from camera to base frame)
+    and  then end-effector coordinates in camera frame.
+    Input: angles (recieved from mp.Pipe from manipulator process), connection variable from mp.Pipe()
+    Output: end-effector coordinates in camera frame. 
+    Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
+    
+    '''
+    print('transform process started')
+    while True:
+        print(angles_rec.poll())
+        if angles_rec.poll(0.01):
+            angles = angles_rec.recv()
+            theta = np.array([angles[0], angles[1], angles[2]])
+            a = np.array([0, -0.612, -0.5723/2])     # Link lengths
+            alpha = np.array([np.pi/2, 0, 0]) # Twist angles
+            d = np.array([0.1273, 0, 0])     # Link offsets
+
+            #Define the extrinsic parameters of the camera
+            cam_pos = np.array([0.05, 0.4, 0.54]) # Camera position
+            cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
+
+            #Calculate transform matrix for each joint
+            T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
+
+            T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
+
+            T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
+
+            #Calculate transform from end-effector to base frame coordinate system
+            T03 = T01 @ T12 @ T23
+
+            Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
+                        [0,0,1,-cam_pos[2]],
+                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2*(-cam_pos[0]+cam_pos[1])],
+                        [0,0,0,1]])
+
+            X_cb = np.dot(Tcb_hand, T03)
+
+            X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
+            x_ee.send(X_cb)
+            print(X_cb)
+
 
 def manip_control_non_stop(waypoints,angles_send):
     '''
@@ -262,7 +318,11 @@ def manip_control_non_stop(waypoints,angles_send):
     # rob.movel(goal)
     i = 0
     while True:
-        print(waypoints[i%len(waypoints)])
+        current_joints = rob.getj()
+        angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
+        # print(i)
+        angles_send.send(angles)
+        """print(waypoints[i%len(waypoints)])
         rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         while True:
             current_joints = rob.getj()
@@ -270,7 +330,7 @@ def manip_control_non_stop(waypoints,angles_send):
             angles_send.send(angles)
             time.sleep(0.1)
             if not rob.is_program_running():
-                break
+                break"""
         i+=1
 
         
@@ -285,20 +345,23 @@ def main():
         xee_send, xee_rec = mp.Pipe()
         angles_send, angles_rec = mp.Pipe()
         coord_send, coord_rec = mp.Pipe()
-        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,)) # add angles_send here so this works
-        coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,))
-        im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,))
-        arduino_proc = mp.Process(target = arduino_theta_control, args = (coord_rec,))
+        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,),daemon=True) # add angles_send here so this works
+        coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,),daemon=True)
+        im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,),daemon=True)
+        arduino_proc = mp.Process(target = arduino_theta_control, args = (coord_rec,),daemon=True)
         manip_proc.start()
         coord_proc.start()
         im_proc.start()
         arduino_proc.start()
-
+        while True:
+            if keyboard.is_pressed('q'):
+                manip_proc.terminate()
+                coord_proc.terminate()
+                im_proc.terminate()
+                arduino_proc.terminate()
+                break
     finally:
-        manip_proc.join()
-        im_proc.join()
-        coord_proc.join()
-        arduino_proc.join()
+        print('FINALLY!')
 
 if __name__ == '__main__':
     main()
