@@ -11,7 +11,7 @@ import urx
 a = np.array([0, -0.612, -0.5723/2])     # Link lengths
 alpha = np.array([np.pi/2, 0, 0]) # Twist angles
 d = np.array([0.1273, 0, 0])     # Link offsets
-theta = np.array([0.5, -0.2, 0.3]) # Joint angles
+theta = np.array([0.0, 0.4, 0.54]) # Joint angles
 
 #Define the extrinsic parameters of the camera
 cam_pos = np.array([0.1, 0.1, 0.1]) # Camera position
@@ -41,9 +41,9 @@ print(Tmat)
 #Coordinates of the end effector:
 X_ee = np.array([T03[0,3],T03[1,3], T03[2,3]])
 
-Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, -0.14142136],
-                     [0,0,1,-0.1],
-                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,0],
+Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
+                     [0,0,1,-cam_pos[2]],
+                     [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2(-cam_pos[0]+cam_pos[1])],
                      [0,0,0,1]])
 
 X_cb = np.dot(Tcb_hand, T03)

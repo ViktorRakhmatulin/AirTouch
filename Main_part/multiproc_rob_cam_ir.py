@@ -13,13 +13,25 @@ import io
 from PIL import Image
 
 def transform_matrix(theta, a, d, alpha):
-    '''Function for transform matrix'''
+    '''Function for transform matrix for all manipulator related stuff'''
     T = np.array([[np.cos(theta), -np.sin(theta)*np.cos(alpha), np.sin(theta)*np.sin(alpha), a*np.cos(theta)],
                   [np.sin(theta), np.cos(theta)*np.cos(alpha), -np.cos(theta)*np.sin(alpha), a*np.sin(theta)],
                   [0, np.sin(alpha), np.cos(alpha), d],
                   [0, 0, 0, 1]])
     return T
 
+def camera_base_transform_matrix(trans_coord, cam_rot, order):
+    '''
+    This function calculates transform matrix for 3 rotations (1 for each axis), and then calculates inverse matrix (we must use it in our case. 
+    Later: create a class for doing inverse matrix.)
+
+    In our function calculates transform matrix from base to camera, inverses it, and we have transform matrix from camera to base. We can further use it
+    To calculate end-effector coordinates.
+
+    Input: transfer coordinates (for each axis, 3x1 size), rotation angles (theta_x, theta_y, theta_z), order in which matrices are rotating.
+
+    Write later))) 
+    '''
 def coordinate_systems_transform(angles_rec, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
     Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
@@ -53,9 +65,9 @@ def coordinate_systems_transform(angles_rec, x_ee):
             #Calculate transform from end-effector to base frame coordinate system
             T03 = T01 @ T12 @ T23
 
-            Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
-                        [0,0,1,-cam_pos[2]],
-                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2*(-cam_pos[0]+cam_pos[1])],
+            Tcb_hand = np.array([[np.cos(cam_rot[2]), np.sin(cam_rot[2]), 0, -cam_pos[0]*np.cos(cam_rot[2]) - cam_pos[1]*np.sin(cam_rot[2])],
+                        [-np.sin(cam_rot[2])*np.cos(cam_rot[0]),np.cos(cam_rot[0])*np.cos(cam_rot[2]),np.sin(cam_rot[0]),cam_pos[0]*np.sin(cam_rot[2])*np.cos(cam_rot[0])-cam_pos[1]* np.cos(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.sin(cam_rot[0])],
+                        [np.sin(cam_rot[0])* np.sin(cam_rot[2]), -np.sin(cam_rot[0])* np.cos(cam_rot[2]),np.cos(cam_rot[0]),-cam_pos[0]*np.sin(cam_rot[0])* np.sin(cam_rot[2])+cam_pos[1]*np.sin(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.cos(cam_rot[0])],
                         [0,0,0,1]])
 
             X_cb = np.dot(Tcb_hand, T03)
