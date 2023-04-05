@@ -206,8 +206,7 @@ def coordinate_systems_transform(angles_rec, x_ee):
     '''
     print('transform process started')
     while True:
-        print(angles_rec.poll())
-        if angles_rec.poll(0.01):
+        if angles_rec.poll():
             angles = angles_rec.recv()
             theta = np.array([angles[0], angles[1], angles[2]])
             a = np.array([0, -0.612, -0.5723/2])     # Link lengths
@@ -237,7 +236,6 @@ def coordinate_systems_transform(angles_rec, x_ee):
 
             X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
             x_ee.send(X_cb)
-            print(X_cb)
 
 
 def manip_control_non_stop(waypoints,angles_send):
@@ -260,17 +258,16 @@ def manip_control_non_stop(waypoints,angles_send):
     while True:
         current_joints = rob.getj()
         angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
-        # print(i)
         angles_send.send(angles)
-        """print(waypoints[i%len(waypoints)])
-        rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
-        while True:
-            current_joints = rob.getj()
-            angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
-            angles_send.send(angles)
-            time.sleep(0.1)
-            if not rob.is_program_running():
-                break"""
+        # print(waypoints[i%len(waypoints)])
+        # rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
+        # while True:
+        #     current_joints = rob.getj()
+        #     angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
+        #     angles_send.send(angles)
+        #     time.sleep(0.1)
+        #     if not rob.is_program_running():
+        #         break
         i+=1
 
         
