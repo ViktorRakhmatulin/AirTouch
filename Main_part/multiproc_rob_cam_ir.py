@@ -21,7 +21,6 @@ def transform_matrix(theta, a, d, alpha):
                   [0, 0, 0, 1]])
     return T
 
-<<<<<<< HEAD
 def camera_base_transform_matrix(trans_coord, cam_rot, order):
     '''
     This function calculates transform matrix for 3 rotations (1 for each axis), and then calculates inverse matrix (we must use it in our case. 
@@ -79,8 +78,6 @@ def coordinate_systems_transform(angles_rec, x_ee):
             x_ee.send(X_cb)
             #print(X_cb)
 
-=======
->>>>>>> 8d784682f40a80e668d697112fb4b2d3ac154510
 def arduino_theta_control(coord_variable):
     print('arduino process started')
 
@@ -252,50 +249,6 @@ def image_process(x_ee, coord_variable):
     finally:
         print('Closing')
         x_ee.close()
-
-def coordinate_systems_transform(angles_rec, x_ee):
-    '''This function calculates coordinates of the end-effector in camera coordinate system.
-    Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
-    end-effector in base frame, transform matrix from base to camera frame
-    (since we want to avoid computing inverse matrix from camera to base frame)
-    and  then end-effector coordinates in camera frame.
-    Input: angles (recieved from mp.Pipe from manipulator process), connection variable from mp.Pipe()
-    Output: end-effector coordinates in camera frame. 
-    Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
-    
-    '''
-    print('transform process started')
-    while True:
-        if angles_rec.poll():
-            angles = angles_rec.recv()
-            theta = np.array([angles[0], angles[1], angles[2]])
-            a = np.array([0, -0.612, -0.5723/2])     # Link lengths
-            alpha = np.array([np.pi/2, 0, 0]) # Twist angles
-            d = np.array([0.1273, 0, 0])     # Link offsets
-
-            #Define the extrinsic parameters of the camera
-            cam_pos = np.array([0.05, 0.4, 0.54]) # Camera position
-            cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
-
-            #Calculate transform matrix for each joint
-            T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
-
-            T12 = transform_matrix(theta[1],a[1],d[1],alpha[1])
-
-            T23 = transform_matrix(theta[2],a[2],d[2],alpha[2])
-
-            #Calculate transform from end-effector to base frame coordinate system
-            T03 = T01 @ T12 @ T23
-
-            Tcb_hand = np.array([[np.sqrt(2)/2, np.sqrt(2)/2, 0, np.sqrt(2)/2*(-cam_pos[0]-cam_pos[1])],
-                        [0,0,1,-cam_pos[2]],
-                        [np.sqrt(2)/2, -np.sqrt(2)/2,0,np.sqrt(2)/2*(-cam_pos[0]+cam_pos[1])],
-                        [0,0,0,1]])
-
-            X_cb = np.dot(Tcb_hand, T03)
-
-            X_cb = np.array([X_cb[0,3], X_cb[1,3], X_cb[2,3]])
-            x_ee.send(X_cb)
 
 
 def manip_control_non_stop(waypoints,angles_send):
