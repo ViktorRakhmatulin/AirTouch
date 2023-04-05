@@ -259,7 +259,6 @@ def manip_control_non_stop(waypoints,angles_send):
     i = 0
     while True:
         current_joints = rob.getj()
-        time.sleep(0.001)
         angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
         # print(i)
         angles_send.send(angles)
