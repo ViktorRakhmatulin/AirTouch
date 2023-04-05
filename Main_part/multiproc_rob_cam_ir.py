@@ -250,7 +250,10 @@ def manip_control_non_stop(waypoints,angles_send):
     # rob.movel(goal)
     i = 0
     while True:
-        print(waypoints[i%len(waypoints)])
+        current_joints = rob.getj()
+        angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
+        angles_send.send(angles)
+        """print(waypoints[i%len(waypoints)])
         rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         while True:
             current_joints = rob.getj()
@@ -258,7 +261,7 @@ def manip_control_non_stop(waypoints,angles_send):
             angles_send.send(angles)
             time.sleep(0.1)
             if not rob.is_program_running():
-                break
+                break"""
         i+=1
 
         
