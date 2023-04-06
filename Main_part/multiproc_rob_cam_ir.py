@@ -271,11 +271,11 @@ def manip_control_non_stop(waypoints,angles_send):
     
     '''
     current_joints = []
-    rob = urx.Robot('192.168.88.25')
-    # rob.movel(waypoints[0])
+    rob = urx.Robot('192.168.88.139')
+    
     print('Robot connected')
     print("manip_control process started")
-    # rob.movel(goal)
+    
     i = 0
     while True:
         current_joints = rob.getj()
