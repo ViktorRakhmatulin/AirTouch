@@ -54,7 +54,7 @@ def coordinate_systems_transform(angles_rec, x_ee):
 
             #Define the extrinsic parameters of the camera
             cam_pos = np.array([0.0, 0.4, 0.54]) # Camera position
-            cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
+            cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
 
             #Calculate transform matrix for each joint
             T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
