@@ -54,7 +54,7 @@ def coordinate_systems_transform(angles_rec, x_ee):
 
             #Define the extrinsic parameters of the camera
             cam_pos = np.array([0.0, 0.4, 0.54]) # Camera position
-            cam_rot = np.array([np.pi/2, 0, np.pi/4]) # Camera rotation
+            cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
 
             #Calculate transform matrix for each joint
             T01 = transform_matrix(theta[0],a[0],d[0],alpha[0])
@@ -91,25 +91,31 @@ def arduino_theta_control(coord_variable):
         if coord_variable.poll():
             coord = coord_variable.recv()
             x_end = coord[0]
-            marker = coord[1].ravel()
-            ee_to_marker = marker - x_end
-
-            cos_alpha = np.dot(x_end, marker) / (np.linalg.norm(x_end)*np.linalg.norm(marker))
-            sin_alpha = np.sqrt(1 - np.power(cos_alpha,2))
-            cos_pitheta = np.dot(ee_to_marker, marker) / (np.linalg.norm(ee_to_marker)*np.linalg.norm(marker))
-            cos_theta = -cos_pitheta
-            sin_theta = np.linalg.norm(marker) * sin_alpha / np.linalg.norm(ee_to_marker)
-            theta = np.arctan2(sin_theta, cos_theta)
-            theta = np.rad2deg(theta)
-            theta = int(theta)
-            #arduino.write(f'go to {theta:03}')
-            distance = np.linalg.norm(marker - x_end)
-            # print(f'Я выпил {theta:03} бутылок пива по цене {distance:.3f}')
-            
-            if distance < 0.2:
+            marker = coord[1]
+            if not np.array([marker]).any():
+                #print(x_end)
                 pass
-                #arduino.write('that turns me on')
-                # print('that turns me on')
+            else:
+                marker = marker.ravel()
+                ee_to_marker = marker - x_end
+
+                cos_alpha = np.dot(x_end, marker) / (np.linalg.norm(x_end)*np.linalg.norm(marker))
+                sin_alpha = np.sqrt(1 - np.power(cos_alpha,2))
+                cos_pitheta = np.dot(ee_to_marker, marker) / (np.linalg.norm(ee_to_marker)*np.linalg.norm(marker))
+                cos_theta = -cos_pitheta
+                sin_theta = np.linalg.norm(marker) * sin_alpha / np.linalg.norm(ee_to_marker)
+                theta = np.arctan2(sin_theta, cos_theta)
+                theta = np.rad2deg(theta)
+                theta = int(theta)
+                #arduino.write(f'go to {theta:03}')
+                distance = np.linalg.norm(marker - x_end)
+                
+                print(f'Я выпил {theta:03} бутылок пива по цене {distance:.3f}')
+                
+                if distance < 0.2:
+                    pass
+                    #arduino.write('that turns me on')
+                    print('that turns me on')
 
 
 
@@ -245,7 +251,10 @@ def image_process(x_ee, coord_variable):
                 cv2.putText(opencvImage, f"x,y,z: {np.round(r.pose_t[0,0],3)} {np.round(r.pose_t[1,0],3)} {np.round(r.pose_t[2,0],3)}", (ptA[0]+25, ptA[1] - 45),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 cv2.putText(opencvImage,f'Distance: {np.linalg.norm(r.pose_t):.3f}',(ptA[0]+40, ptA[1] - 65),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                
+            else:
+                if x_ee.poll():
+                    x_end = x_ee.recv()
+                    coord_variable.send((x_end, None))
     finally:
         print('Closing')
         x_ee.close()
