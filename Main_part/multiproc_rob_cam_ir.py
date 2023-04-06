@@ -45,8 +45,8 @@ def coordinate_systems_transform(angles_rec, x_ee):
     
     '''
     while True:
-        angles = angles_rec.recv()
-        if angles.any():
+        angles = angles_rec.get()
+        if np.array([angles]).any():
             theta = np.array([angles[0], angles[1], angles[2]])
             a = np.array([0, -0.612, -0.5723/2])     # Link lengths
             alpha = np.array([np.pi/2, 0, 0]) # Twist angles
@@ -271,7 +271,7 @@ def manip_control_non_stop(waypoints,angles_send):
     
     '''
     current_joints = []
-    rob = urx.Robot('192.168.88.139')
+    rob = urx.Robot('192.168.88.25')
     # rob.movel(waypoints[0])
     print('Robot connected')
     print("manip_control process started")
@@ -280,7 +280,10 @@ def manip_control_non_stop(waypoints,angles_send):
     while True:
         current_joints = rob.getj()
         angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
-        angles_send.send(angles)
+        print(i,angles)
+        angles_send.put(angles)
+        time.sleep(0.1)
+        
         # print(waypoints[i%len(waypoints)])
         # rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         # while True:
@@ -302,10 +305,13 @@ def main():
         t4 = [0.872,-0.0328,0.501,0.62,-4.2,1.5]
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
-        angles_send, angles_rec = mp.Pipe()
+        # angles_send, angles_rec = mp.Pipe()
+        q_angles = mp.Queue()
         coord_send, coord_rec = mp.Pipe()
-        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,),daemon=True) # add angles_send here so this works
-        coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,),daemon=True)
+        # manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,),daemon=True) # add angles_send here so this works
+        # coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,),daemon=True)
+        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, q_angles,),daemon=True) # add angles_send here so this works
+        coord_proc = mp.Process(target = coordinate_systems_transform, args = (q_angles, xee_send,),daemon=True)
         im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,),daemon=True)
         arduino_proc = mp.Process(target = arduino_theta_control, args = (coord_rec,),daemon=True)
         manip_proc.start()
