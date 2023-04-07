@@ -126,6 +126,11 @@ def image_process(x_ee, coord_variable):
     
     '''
     print('Image processing process started')
+    fl = 0
+    arduino = serial.Serial('COM7',baudrate=9600)
+    time.sleep(5)
+    arduino.write(b'init')
+
     camera_params = (506.19083684, 508.36108854,
                  317.93111342, 243.12403806)
     tag_size = 0.0375
@@ -150,54 +155,77 @@ def image_process(x_ee, coord_variable):
     #i = 0
     pose_prev = np.array([0,0,0])
     vel = 0
-    try:
-        while True:
-            start = time.time()
-            # Read the length of the image as a 32-bit unsigned int. If the
-            # length is zero, quit the loop
-            image_len = struct.unpack(
-                '<L', connection.read(struct.calcsize('<L')))[0]
-            if not image_len:
-                break
-            # Construct a stream to hold the image data and read the image
-            # data from the connection
-            image_stream = io.BytesIO()
-            image_stream.write(connection.read(image_len))
-            # Rewind the stream, open it as an image with PIL and do some
-            # processing on it
-            image_stream.seek(0)
-            image = Image.open(image_stream)
-            opencvImage = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            # Translate image to gray
-            gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
+    data_file = open('./exp1/distance_vel_time1.txt','w')
+    with open('./exp1/distance_vel_time1.txt','w') as data_file:
+        try:
+            general_start = time.time()
+            while True:
+                start = time.time()
+                # Read the length of the image as a 32-bit unsigned int. If the
+                # length is zero, quit the loop
+                image_len = struct.unpack(
+                    '<L', connection.read(struct.calcsize('<L')))[0]
+                if not image_len:
+                    break
+                # Construct a stream to hold the image data and read the image
+                # data from the connection
+                image_stream = io.BytesIO()
+                image_stream.write(connection.read(image_len))
+                # Rewind the stream, open it as an image with PIL and do some
+                # processing on it
+                image_stream.seek(0)
+                image = Image.open(image_stream)
+                opencvImage = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                # Translate image to gray
 
-            # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
+                gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
 
-            results = detector.detect(
-                gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
-            #change
+                # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
 
-            if results:
-                r = results[0]
-                '''
-                HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
-                '''
+                results = detector.detect(
+                    gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
+                #change
 
-                if x_ee.poll():
-                    x_end = x_ee.recv()
+                if results:
+                    r = results[0]
+                    '''
+                    HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
+                    '''
+
+                    if x_ee.poll():
+                        x_end = x_ee.recv()
+                        
+                        #coord_variable.send((x_end, r.pose_t))
+                    marker_pose = np.array(r.pose_t).ravel()
+                    vel = np.linalg.norm((marker_pose - pose_prev)/dt)
+                    pose_prev = marker_pose
+                    distance = np.linalg.norm(marker_pose)
+                    message = str(distance) + ' ' + str(vel) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    data_file.write(str(message))
+                    if distance < 0.2:
+                        if not fl:
+                            arduino.write(b'suck')
+                            print('Sucking')
+                            fl = 1
+                    else:
+                        if fl:
+                            arduino.write(b'hold')
+                            print('Stopping')
+                            fl=0
                     
-                    #coord_variable.send((x_end, r.pose_t))
-                    
-                vel = (np.array(r.pose_t).ravel() - pose_prev)/dt
-                
-            else:
-                if x_ee.poll():
-                    x_end = x_ee.recv()
-                    coord_variable.send((x_end, None))
-            dt = time.time() - start
-    finally:
-        print('Closing')
-        x_ee.close()
+                else:
+                    if x_ee.poll():
+                        x_end = x_ee.recv()
+                        coord_variable.send((x_end, None))
+                    message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    data_file.write(message)
+                dt = time.time() - start
+
+
+        finally:
+            data_file.close()
+            print('Closing')
+            x_ee.close()
 
 
 def manip_control_non_stop(waypoints,angles_send):
@@ -244,27 +272,26 @@ def main():
         goal = [0.857,-0.099,0.492,1.28,1.19,1.21]
         t3 = [0.847,-0.147,0.485,0.9,1.37,1.34]
         t4 = [0.872,-0.0328,0.501,1.34,1.00,0.9]
+
         waypoints = [home,goal,t3,t4,goal]
         xee_send, xee_rec = mp.Pipe()
         # angles_send, angles_rec = mp.Pipe()
         q_angles = mp.Queue()
         coord_send, coord_rec = mp.Pipe()
-        # manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, angles_send,),daemon=True) # add angles_send here so this works
-        # coord_proc = mp.Process(target = coordinate_systems_transform, args = (angles_rec, xee_send,),daemon=True)
-        manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, q_angles,),daemon=True) # add angles_send here so this works
-        coord_proc = mp.Process(target = coordinate_systems_transform, args = (q_angles, xee_send,),daemon=True)
+        # manip_proc = mp.Process(target=manip_control_non_stop,args=(waypoints, q_angles,),daemon=True) # add angles_send here so this works
+        # coord_proc = mp.Process(target = coordinate_systems_transform, args = (q_angles, xee_send,),daemon=True)
         im_proc = mp.Process(target=image_process,args=(xee_rec, coord_send,),daemon=True)
-        arduino_proc = mp.Process(target = arduino_theta_control, args = (coord_rec,),daemon=True)
-        manip_proc.start()
-        coord_proc.start()
+        # arduino_proc = mp.Process(target = arduino_theta_control, args = (coord_rec,),daemon=True)
+        # manip_proc.start()
+        # coord_proc.start()
         im_proc.start()
-        arduino_proc.start()
+        # arduino_proc.start()
         while True:
             if keyboard.is_pressed('q'):
-                manip_proc.terminate()
-                coord_proc.terminate()
+                # manip_proc.terminate()
+                # coord_proc.terminate()
                 im_proc.terminate()
-                arduino_proc.terminate()
+                # arduino_proc.terminate()
                 break
     finally:
         print('FINALLY!')
