@@ -13,6 +13,8 @@ import io
 from PIL import Image
 import keyboard
 
+file_name = 'Name_Surname_exp2.txt'
+
 def coordinate_systems_transform(xee_rec, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
     Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
@@ -78,73 +80,72 @@ def image_process(x_ee):
     
     pose_prev = np.array([0,0,0])
     vel = 0
-    data_file = open('./exp1/distance_vel_time1.txt','w')
-    with open('./exp1/distance_vel_time1.txt','w') as data_file:
-        try:
-            general_start = time.time()
-            while True:
-                start = time.time()
-                # Read the length of the image as a 32-bit unsigned int. If the
-                # length is zero, quit the loop
-                image_len = struct.unpack(
-                    '<L', connection.read(struct.calcsize('<L')))[0]
-                if not image_len:
-                    break
-                # Construct a stream to hold the image data and read the image
-                # data from the connection
-                image_stream = io.BytesIO()
-                image_stream.write(connection.read(image_len))
-                # Rewind the stream, open it as an image with PIL and do some
-                # processing on it
-                image_stream.seek(0)
-                image = Image.open(image_stream)
-                opencvImage = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                # Translate image to gray
+    data_file = open(file_name,'w')
+    try:
+        general_start = time.time()
+        while True:
+            start = time.time()
+            # Read the length of the image as a 32-bit unsigned int. If the
+            # length is zero, quit the loop
+            image_len = struct.unpack(
+                '<L', connection.read(struct.calcsize('<L')))[0]
+            if not image_len:
+                break
+            # Construct a stream to hold the image data and read the image
+            # data from the connection
+            image_stream = io.BytesIO()
+            image_stream.write(connection.read(image_len))
+            # Rewind the stream, open it as an image with PIL and do some
+            # processing on it
+            image_stream.seek(0)
+            image = Image.open(image_stream)
+            opencvImage = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            # Translate image to gray
 
-                gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
 
-                # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
+            # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
 
-                results = detector.detect(
-                    gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
-                #change
+            results = detector.detect(
+                gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
+            #change
 
-                if results:
-                    r = results[0]
-                    '''
-                    HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
-                    '''
+            if results:
+                r = results[0]
+                '''
+                HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
+                '''
 
-                    if x_ee.poll():
-                        x_end = x_ee.recv()
-                        
-                        marker_pose = np.array(r.pose_t).ravel()
-                        vel = np.linalg.norm((marker_pose - pose_prev)/dt)
-                        pose_prev = marker_pose
-                        distance = np.linalg.norm(marker_pose - x_end)
-                        message = str(distance) + ' ' + str(vel) + ' ' + str(round(time.time()-general_start,2)) + '\n'
-                        data_file.write(str(message))
-                        if distance < 0.2:
-                            if not fl:
-                                arduino.write(b'suck')
-                                print('Sucking')
-                                fl = 1
-                        else:
-                            if fl:
-                                arduino.write(b'hold')
-                                print('Stopping')
-                                fl=0
+                if x_ee.poll():
+                    x_end = x_ee.recv()
                     
-                else:
-                    message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
-                    data_file.write(message)
-                dt = time.time() - start
+                    marker_pose = np.array(r.pose_t).ravel()
+                    vel = np.linalg.norm((marker_pose - pose_prev)/dt)
+                    pose_prev = marker_pose
+                    distance = np.linalg.norm(marker_pose - x_end)
+                    message = str(distance) + ' ' + str(vel) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    data_file.write(str(message))
+                    if distance < 0.2:
+                        if not fl:
+                            arduino.write(b'suck')
+                            print('Sucking')
+                            fl = 1
+                    else:
+                        if fl:
+                            arduino.write(b'hold')
+                            print('Stopping')
+                            fl=0
+                
+            else:
+                message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                data_file.write(message)
+            dt = time.time() - start
 
 
-        finally:
-            data_file.close()
-            print('Closing')
-            x_ee.close()
+    finally:
+        data_file.close()
+        print('Closing')
+        x_ee.close()
 
 
 def manip_control_non_stop(waypoints,xee_send):
