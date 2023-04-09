@@ -8,6 +8,7 @@ import pupil_apriltags as apriltag
 import time
 from scipy.spatial.transform import Rotation as R
 import transforms3d
+import pickle
 
 
 camera_params = (506.19083684, 508.36108854,
@@ -95,12 +96,12 @@ try:
             # extract rotation and translation vectors
             #rvec, _ = cv2.Rodrigues(r.pose_R)
             rvec = r.pose_R
-
+            print(rvec)
             dcoeffs = numpy.zeros(5)
             # find object points of the tag 
             opoints = numpy.float32([[1, 0, 0],
-                                     [0, -1, 0],
-                                     [0, 0, -1]]).reshape(-1, 3) * tag_size
+                                     [0, 1, 0],
+                                     [0, 0, 1]]).reshape(-1, 3) * tag_size
             # project object points to image plane
             ipoints, _ = cv2.projectPoints(opoints, rvec, r.pose_t, K, dcoeffs)
             ipoints = numpy.round(ipoints).astype(int)
@@ -126,14 +127,14 @@ try:
             
             # print the information about the tag: id, rotation, translation, center, corners, distance
             #print("[INFO] tag id: {}".format(id_fam))
-            #print("Rotation: {}".format(r.pose_R))
-            print("Translation: {}".format(r.pose_t))
+            print("Rotation: {}".format(r.pose_R))
+            
+            # print("Translation: {}".format(r.pose_t))
             #cv2.putText(opencvImage, f"{numpy.round(r.pose_R[0],2)}\n {numpy.round(r.pose_R[1],2)}\n {numpy.round(r.pose_R[2],2)}", (ptA[0]+25, ptA[1] - 50),
                         # cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.putText(opencvImage, f"x,y,z: {numpy.round(r.pose_t[0,0],2)} {numpy.round(r.pose_t[1,0],2)} {numpy.round(r.pose_t[2,0],2)}", (ptA[0]+25, ptA[1] - 45),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             cv2.putText(opencvImage,f'Distance: {numpy.linalg.norm(r.pose_t):.2f}',(ptA[0]+40, ptA[1] - 65),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            print(r.pose_t)
             #print("Center: {}".format(r.center))
             #print("Corners: {}".format(r.corners))
             #print("Distance: {}".format(distance))
@@ -142,7 +143,17 @@ try:
             # and send it to the client
             #rotation = r.pose_R
             #rot_quat = tf.transformations.quaternion_from_matrix(rotation)
-            rotation = r.pose_R
+            rotation_marker = r.pose_R
+            translation_marker = numpy.array(r.pose_t).ravel()
+            T_marker = numpy.zeros((4,4))
+            T_marker[:3,:3] = numpy.array(rotation_marker)
+            T_marker[:3,3] = translation_marker
+            T_marker[3,3] = 1
+            T_marker_base = numpy.array([[0,-1,0,0],[-1,0,0,0.75],[0,0,-1,0],[0,0,0,1]])
+            result_transform = T_marker @ T_marker_base
+            with open('camera_to_base.pickle','wb') as file:
+                pickle.dump(result_transform,file)
+            break
             rotation = numpy.round(rotation, 3)
             rot_quat = transforms3d.quaternions.mat2quat(rotation)
             translation = r.pose_t

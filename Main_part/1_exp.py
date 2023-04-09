@@ -127,9 +127,10 @@ def image_process(x_ee, coord_variable):
     '''
     print('Image processing process started')
     fl = 0
-    arduino = serial.Serial('COM7',baudrate=9600)
-    time.sleep(5)
-    arduino.write(b'init')
+    dt = 1
+    # arduino = serial.Serial('COM7',baudrate=9600)
+    # time.sleep(5)
+    # arduino.write(b'init')
 
     camera_params = (506.19083684, 508.36108854,
                  317.93111342, 243.12403806)
@@ -155,8 +156,8 @@ def image_process(x_ee, coord_variable):
     #i = 0
     pose_prev = np.array([0,0,0])
     vel = 0
-    data_file = open('./exp1/distance_vel_time1.txt','w')
-    with open('./exp1/distance_vel_time1.txt','w') as data_file:
+    data_file = open('./Main_part/exp1/distance_vel_time1.txt','w')
+    with open('./Main_part/exp1/distance_vel_time1.txt','w') as data_file:
         try:
             general_start = time.time()
             while True:
@@ -202,14 +203,14 @@ def image_process(x_ee, coord_variable):
                     distance = np.linalg.norm(marker_pose)
                     message = str(distance) + ' ' + str(vel) + ' ' + str(round(time.time()-general_start,2)) + '\n'
                     data_file.write(str(message))
-                    if distance < 0.2:
+                    if distance < 0.4:
                         if not fl:
-                            arduino.write(b'suck')
+                            # arduino.write(b'suck')
                             print('Sucking')
                             fl = 1
                     else:
                         if fl:
-                            arduino.write(b'hold')
+                            # arduino.write(b'hold')
                             print('Stopping')
                             fl=0
                     
@@ -246,22 +247,21 @@ def manip_control_non_stop(waypoints,angles_send):
     
     i = 0
     while True:
-        # current_joints = rob.getj()
-        # angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
+        current_joints = rob.getj()
+        angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
         # print(i,angles)
-        # angles_send.put(angles)
-        # time.sleep(0.1)
+        angles_send.put(angles)
+        time.sleep(0.1)
         
-        print(waypoints[i%len(waypoints)])
+        '''print(waypoints[i%len(waypoints)])
         rob.movel(waypoints[i % len(waypoints)],0.01,0.01,wait=False)
         while True:
             current_joints = rob.getj()
-            current_position = rob.getl()
             angles = np.array([current_joints[0],current_joints[1], current_joints[2]])
             angles_send.put(angles)
             time.sleep(0.1)
             if not rob.is_program_running():
-                break
+                break'''
         i+=1
 
         
