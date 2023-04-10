@@ -14,8 +14,13 @@ from PIL import Image
 import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
+import os
 
+<<<<<<< HEAD
 file_name = './Main_part/exp1_vel/exp1_reaction_Viktor_Rakhmatulin_3.txt'
+=======
+file_name = './Main_part/exp1_vel/exp1_reaction_wtf.txt'
+>>>>>>> 073f3b3346ea098f9593efdbf5458880b714ca70
 
 def coordinate_systems_transform(ee_coord, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
@@ -64,7 +69,7 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-    arduino = serial.Serial('COM8',baudrate=115200)
+    arduino = serial.Serial('COM7',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(2)
@@ -95,6 +100,7 @@ def image_process(x_ee):
     # out = cv2.VideoWriter('recognition.mp4',fourcc,30,(640,480))
     pose_prev = np.array([0,0,0])
     vel = 0
+<<<<<<< HEAD
     data_file = open(file_name,'w')
 
     try:
@@ -140,6 +146,71 @@ def image_process(x_ee):
                 # x_end = x_ee.get()
                 # if np.array([x_end]).any():
                 #     x_end = x_end[:3]
+=======
+    # data_file = open(file_name,'w')
+    with open(file_name,'w') as data_file:
+        try: 
+            ardu_time = 0
+            general_start = time.time()
+            #ardu_time = time.time()
+            while True:
+                if x_ee.poll():
+                    x_end = x_ee.recv()
+                    x_end  = x_end[:3]
+                start = time.time()
+                # Read the length of the image as a 32-bit unsigned int. If the
+                # length is zero, quit the loop
+                image_len = struct.unpack(
+                    '<L', connection.read(struct.calcsize('<L')))[0]
+                if not image_len:
+                    break
+                # Construct a stream to hold the image data and read the image
+                # data from the connection
+                image_stream = io.BytesIO()
+                image_stream.write(connection.read(image_len))
+                # Rewind the stream, open it as an image with PIL and do some
+                # processing on it
+                image_stream.seek(0)
+                image = Image.open(image_stream)
+                opencvImage = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                # Translate image to gray
+
+                gray = cv2.cvtColor(opencvImage, cv2.COLOR_BGR2GRAY)
+
+                # Detecting april tags in the image and drawing the bounding box and center of the tag on the image
+                results = detector.detect(
+                    gray, estimate_tag_pose=True, camera_params=camera_params, tag_size=tag_size)
+                #change
+                
+                
+                if results:
+                    r = results[0]
+                    '''
+                    HERE WE SEND THE DISTANCE BETWEEEN END EFFECTOR AND MARKERS
+                    '''
+                    # x_end = x_ee.get()
+                    # if np.array([x_end]).any():
+                    #     x_end = x_end[:3]
+                        
+                    marker_pose = np.array(r.pose_t).ravel()
+                    vel = np.linalg.norm((marker_pose - pose_prev)/dt)
+                    pose_prev = marker_pose
+                    distance = np.linalg.norm(marker_pose)
+                    message = str(round(distance,3)) + ' ' + str(round(vel,3)) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    print(message)
+                    data_file.write(str(message))
+                    (ptA, ptB, ptC, ptD) = r.corners
+                    ptB = (int(ptB[0]), int(ptB[1]))
+                    ptC = (int(ptC[0]), int(ptC[1]))
+                    ptD = (int(ptD[0]), int(ptD[1]))
+                    ptA = (int(ptA[0]), int(ptA[1]))
+                    # draw the bounding box of the AprilTag detection
+                    cv2.line(opencvImage, ptA, ptB, (0, 255, 0), 2)
+                    cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
+                    cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
+                    cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
+                    cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0]+40, ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+>>>>>>> 073f3b3346ea098f9593efdbf5458880b714ca70
                     
                 marker_pose = np.array(r.pose_t).ravel()
                 vel = np.linalg.norm(marker_pose - pose_prev)/dt
@@ -202,12 +273,45 @@ def image_process(x_ee):
             cv2.imshow('Image',opencvImage)
             cv2.waitKey(1)
 
+<<<<<<< HEAD
         
     finally:
         data_file.close()
         print('Closing')
         x_ee.close()
         #ardu_fl.close()
+=======
+                    #
+                    
+                else:
+                    message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    print(message)
+                    data_file.write(message)
+                    if time.time()-ardu_time > 0.1 and fl:
+                        ardu_time = time.time()
+                        arduino.write(b'hold')
+                        print('Stopping')
+                        fl=0
+                # out.write(opencvImage)
+                    # if time.time()-ardu_time > 4:
+                    #     ardu_time = time.time()
+                    #     arduino.write(b'hold')
+                    #     #print('Stopping')
+                    #     fl=0
+                #ardu_fl.send(fl)
+                cv2.imshow('Image',opencvImage)
+                cv2.waitKey(1)
+                dt = time.time() - start
+
+
+            
+        finally:
+            # data_file.close()
+            print('Closing')
+            x_ee.close()
+            #ardu_fl.close()
+
+>>>>>>> 073f3b3346ea098f9593efdbf5458880b714ca70
 
 def arduino_control(ardu_fl):
     arduino = serial.Serial('COM8',baudrate=115200)
@@ -304,4 +408,5 @@ def main():
         print('FINALLY!')
 
 if __name__ == '__main__':
+    print(os.listdir())
     main()
