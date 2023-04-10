@@ -15,7 +15,7 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-file_name = './Main_part/exp1_vel/exp1_reaction_Denis_Grankin.txt'
+file_name = './Main_part/exp1_vel/exp1_reaction_AAAAA.txt'
 
 def coordinate_systems_transform(ee_coord, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
@@ -91,8 +91,8 @@ def image_process(x_ee):
         decode_sharpening=0.6,
         debug=0)
     
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('recognition.mp4',fourcc,30,(640,480))
+    #fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    #out = cv2.VideoWriter('recognition.mp4',fourcc,30,(640,480))
     pose_prev = np.array([0,0,0])
     vel = 0
     # data_file = open(file_name,'w')
