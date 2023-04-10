@@ -15,7 +15,7 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-file_name = './Main_part/exp1_vel/exp1_reaction_Name_Surname.txt'
+file_name = './Main_part/exp1_vel/exp1_reaction_Denis_Grankin.txt'
 
 def coordinate_systems_transform(ee_coord, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
@@ -157,7 +157,7 @@ def image_process(x_ee):
                 cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
                 cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0]+40, ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                if distance < 0.3:
+                if distance < 0.35:
                     ardu_time = time.time()
                     if not fl:
                         arduino.write(b'suck 1200')
