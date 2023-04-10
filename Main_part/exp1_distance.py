@@ -16,7 +16,7 @@ import os
 
 start = time.time()
 
-file = open('./Main_part/exp1/distance_check.txt','w')
+file = open('./Main_part/exp1_dist/exp1_distance_Name_Surname.txt','w')
 
 print('Image processing process started')
 camera_params = (506.19083684, 508.36108854,
