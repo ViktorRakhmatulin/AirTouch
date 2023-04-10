@@ -13,10 +13,12 @@ import io
 from PIL import Image
 import keyboard
 import os
+from scipy.spatial.transform import Rotation
 
 start = time.time()
 
-file = open('./Main_part/exp1_dist/exp1_distance_Sergey_Davidenko_25.txt','w')
+file = open('./Main_part/exp1_dist/exp1_distance_honest_filedMikhaildd.txt','w')
+file.write('hand to marker: 0.110\n')
 
 print('Image processing process started')
 camera_params = (506.19083684, 508.36108854,
@@ -83,15 +85,16 @@ try:
             # # draw the bounding box of the AprilTag detection
             # cv2.line(opencvImage, ptA, ptB, (0, 255, 0), 2)
             # cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
-            # cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
+            # cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)c
             # cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
             # cv2.putText(opencvImage, f"x,y,z: {np.round(r.pose_t[0,0],2)} {np.round(r.pose_t[1,0],2)} {np.round(r.pose_t[2,0],2)}", (ptA[0]+25, ptA[1] - 45),
             #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             # cv2.imshow('image',opencvImage)
             # cv2.waitKey(1)
             print(distance)
+            rot_vec = Rotation.from_matrix(r.pose_R)
             if keyboard.is_pressed('c'):
-                file.write(f'{(time.time()-start):.3f} {distance:.3f}\n')
+                file.write(f'{(time.time()-start):.3f} {distance:.3f} x:{r.pose_t[0,0]:.4f} y:{r.pose_t[1,0]:.4f} z:{r.pose_t[2,0]:.4f} rx:{rot_vec.as_rotvec()[0]:.4f} ry: {rot_vec.as_rotvec()[1]:.4f} rz: {rot_vec.as_rotvec()[2]:.4f} \n')
         if keyboard.is_pressed('q'):
             break
 finally:
