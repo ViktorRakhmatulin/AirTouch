@@ -96,8 +96,9 @@ def image_process(x_ee):
     pose_prev = np.array([0,0,0])
     vel = 0
     # data_file = open(file_name,'w')
-    try:
-        with open(file_name,'w') as data_file:
+    with open(file_name,'w') as data_file:
+        try:
+            
             ardu_time = 0
             general_start = time.time()
             #ardu_time = time.time()
@@ -201,12 +202,12 @@ def image_process(x_ee):
                 cv2.waitKey(1)
                 dt = time.time() - start
 
-        
-    finally:
-        # data_file.close()
-        print('Closing')
-        x_ee.close()
-        #ardu_fl.close()
+            
+        finally:
+            # data_file.close()
+            print('Closing')
+            x_ee.close()
+            #ardu_fl.close()
 
 
 def arduino_control(ardu_fl):
