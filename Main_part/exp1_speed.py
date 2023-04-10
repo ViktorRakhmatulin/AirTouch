@@ -64,7 +64,7 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-    arduino = serial.Serial('COM8',baudrate=115200)
+    arduino = serial.Serial('COM7',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(2)
@@ -97,8 +97,7 @@ def image_process(x_ee):
     vel = 0
     # data_file = open(file_name,'w')
     with open(file_name,'w') as data_file:
-        try:
-            
+        try: 
             ardu_time = 0
             general_start = time.time()
             #ardu_time = time.time()
@@ -146,6 +145,7 @@ def image_process(x_ee):
                     pose_prev = marker_pose
                     distance = np.linalg.norm(marker_pose)
                     message = str(round(distance,3)) + ' ' + str(round(vel,3)) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    print(message)
                     data_file.write(str(message))
                     (ptA, ptB, ptC, ptD) = r.corners
                     ptB = (int(ptB[0]), int(ptB[1]))
@@ -201,6 +201,7 @@ def image_process(x_ee):
                 cv2.imshow('Image',opencvImage)
                 cv2.waitKey(1)
                 dt = time.time() - start
+
 
             
         finally:
