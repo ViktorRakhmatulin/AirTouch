@@ -14,8 +14,9 @@ from PIL import Image
 import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
+import os
 
-file_name = './Main_part/exp1_vel/exp1_reaction_AAAAA.txt'
+file_name = './Main_part/exp1_vel/exp1_reaction_wtf.txt'
 
 def coordinate_systems_transform(ee_coord, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
@@ -185,6 +186,7 @@ def image_process(x_ee):
                     
                 else:
                     message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
+                    print(message)
                     data_file.write(message)
                     if time.time()-ardu_time > 0.1 and fl:
                         ardu_time = time.time()
@@ -306,4 +308,5 @@ def main():
         print('FINALLY!')
 
 if __name__ == '__main__':
+    print(os.listdir())
     main()
