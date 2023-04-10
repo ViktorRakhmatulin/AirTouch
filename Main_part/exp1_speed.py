@@ -38,7 +38,7 @@ def coordinate_systems_transform(ee_coord, x_ee):
             cam_pos = np.array([0.175, 0.445, 0.35]) # Camera position
             cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
 
-            Tcb_hand = np.array([[np.cos(cam_rot[2]), np.sin(cqam_rot[2]), 0, -cam_pos[0]*np.cos(cam_rot[2]) - cam_pos[1]*np.sin(cam_rot[2])],
+            Tcb_hand = np.array([[np.cos(cam_rot[2]), np.sin(cam_rot[2]), 0, -cam_pos[0]*np.cos(cam_rot[2]) - cam_pos[1]*np.sin(cam_rot[2])],
                         [-np.sin(cam_rot[2])*np.cos(cam_rot[0]),np.cos(cam_rot[0])*np.cos(cam_rot[2]),np.sin(cam_rot[0]),cam_pos[0]*np.sin(cam_rot[2])*np.cos(cam_rot[0])-cam_pos[1]* np.cos(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.sin(cam_rot[0])],
                         [np.sin(cam_rot[0])* np.sin(cam_rot[2]), -np.sin(cam_rot[0])* np.cos(cam_rot[2]),np.cos(cam_rot[0]),-cam_pos[0]*np.sin(cam_rot[0])* np.sin(cam_rot[2])+cam_pos[1]*np.sin(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.cos(cam_rot[0])],
                         [0,0,0,1]])
@@ -189,7 +189,7 @@ def image_process(x_ee):
                     arduino.write(b'hold')
                     print('Stopping')
                     fl=0
-            out.write(opencvImage)
+            # out.write(opencvImage)
                 # if time.time()-ardu_time > 4:
                 #     ardu_time = time.time()
                 #     arduino.write(b'hold')
@@ -198,6 +198,7 @@ def image_process(x_ee):
             #ardu_fl.send(fl)
             cv2.imshow('Image',opencvImage)
             cv2.waitKey(1)
+            dt = time.time() - start
 
         
     finally:
