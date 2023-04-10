@@ -251,7 +251,7 @@ def manip_control_non_stop(waypoints,ee_coord):
         time.sleep(0.1)
 
         print(waypoints[i%len(waypoints)])
-        rob.movel(waypoints[i % len(waypoints)],0.01,0.015,wait=False)
+        rob.movel(waypoints[i % len(waypoints)],0.018,0.05,wait=False)
         while True:
             current_position = np.array(rob.getl())
             ee_coord.put(current_position)
@@ -273,7 +273,7 @@ def main():
         t7 = [0.84832,-0.27680,0.35760,0.8533,-4.1342,1.9250] # center down
         t8 = [0.87760, -0.20860, 0.35763, 0.0348, 1.3320, -0.9303] #toxic position (bottom CLOSE!!!!)
 
-        waypoints = [t2,t3,t4,t7,t8,t4,t5,t4]
+        waypoints = [t8,t3,t4,t6,t7,t4,t5,t4]
         xee = mp.Queue()
         # angles_send, angles_rec = mp.Pipe()
         ee_coord = mp.Queue()

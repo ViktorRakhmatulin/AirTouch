@@ -26,7 +26,7 @@ def coordinate_systems_transform(ee_coord, x_ee):
     Input: angles (recieved from mp.Pipe from manipulator process), connection variable from mp.Pipe()
     Output: end-effector coordinates in camera frame. 
     Note: since we are using multiprocessing, we are sending the coordinates with x_ee.send() command. 
-    q
+
     '''
     with open('camera_to_base.pickle','rb') as file:
         camera_to_base = pickle.load(file)
@@ -38,7 +38,7 @@ def coordinate_systems_transform(ee_coord, x_ee):
             cam_pos = np.array([0.175, 0.445, 0.35]) # Camera position
             cam_rot = np.array([-np.pi/2, 0, -3*np.pi/4]) # Camera rotation
 
-            Tcb_hand = np.array([[np.cos(cam_rot[2]), np.sin(cam_rot[2]), 0, -cam_pos[0]*np.cos(cam_rot[2]) - cam_pos[1]*np.sin(cam_rot[2])],
+            Tcb_hand = np.array([[np.cos(cam_rot[2]), np.sin(cqam_rot[2]), 0, -cam_pos[0]*np.cos(cam_rot[2]) - cam_pos[1]*np.sin(cam_rot[2])],
                         [-np.sin(cam_rot[2])*np.cos(cam_rot[0]),np.cos(cam_rot[0])*np.cos(cam_rot[2]),np.sin(cam_rot[0]),cam_pos[0]*np.sin(cam_rot[2])*np.cos(cam_rot[0])-cam_pos[1]* np.cos(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.sin(cam_rot[0])],
                         [np.sin(cam_rot[0])* np.sin(cam_rot[2]), -np.sin(cam_rot[0])* np.cos(cam_rot[2]),np.cos(cam_rot[0]),-cam_pos[0]*np.sin(cam_rot[0])* np.sin(cam_rot[2])+cam_pos[1]*np.sin(cam_rot[0])*np.cos(cam_rot[2])-cam_pos[2]*np.cos(cam_rot[0])],
                         [0,0,0,1]])
