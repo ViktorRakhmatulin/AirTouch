@@ -18,10 +18,10 @@ from scipy.spatial.transform import Rotation
 start = time.time()
 
 folder_path = './Main_part/data/exp1_dist/protocol_relocations/'
-filename = "ttest" + '.txt'
+filename = "Demetros_25" + '.txt'
 
 file = open(folder_path + filename,'w+')
-file.write('hand to marker: 0.110\n')
+file.write('hand to marker: 0.10\n')
 file.write('timestamp dist x y z rx ry rz\n')
 
 print('Image processing process started')
