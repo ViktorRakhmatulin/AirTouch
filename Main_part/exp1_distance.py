@@ -18,7 +18,7 @@ from scipy.spatial.transform import Rotation
 start = time.time()
 
 folder_path = './Main_part/data/exp1_dist/protocol_relocations/'
-filename = "Demetros_25" + '.txt'
+filename = "Oussama_35" + '.txt'
 
 file = open(folder_path + filename,'w+')
 file.write('hand to marker: 0.10\n')
