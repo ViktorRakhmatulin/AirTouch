@@ -15,8 +15,10 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-file_name = './Main_part/exp2/Sergei_Davidenko_imp_exp2_fin.txt'
+folder_path = './Main_part/data/exp2/11thApril/'
+filename = "Vik_prob_l" + '.txt'
 
+file_name = folder_path + filename
 def coordinate_systems_transform(ee_coord, x_ee):
     '''This function calculates coordinates of the end-effector in camera coordinate system.
     Since our impaler is on the 3rd link of UR10 robot, we extract only parameters for 3 joints and calculate transform matrices for 
@@ -64,7 +66,7 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-    arduino = serial.Serial('COM8',baudrate=115200)
+    arduino = serial.Serial('COM5',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(2)
@@ -95,7 +97,7 @@ def image_process(x_ee):
     out = cv2.VideoWriter('recognition.mp4',fourcc,30,(640,480))
     pose_prev = np.array([0,0,0])
     vel = 0
-    data_file = open(file_name,'w')
+    data_file = open(file_name,'w+')
     try:
         ardu_time = 0
         general_start = time.time()
@@ -208,7 +210,7 @@ def image_process(x_ee):
 
 
 def arduino_control(ardu_fl):
-    arduino = serial.Serial('COM8',baudrate=115200)
+    arduino = serial.Serial('COM5',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(1)
@@ -219,8 +221,10 @@ def arduino_control(ardu_fl):
                 time.sleep(1)
                 fl = ardu_fl.recv()
                 if fl == 0:
+                    pass
                     arduino.write(b'hold')
                 else:
+                    pass
                     arduino.write(b'suck 1200')
                 print(fl)
     finally:
