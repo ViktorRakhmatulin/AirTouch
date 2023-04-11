@@ -98,7 +98,7 @@ try:
             print(distance)
             rot_vec = Rotation.from_matrix(r.pose_R)
             if keyboard.is_pressed('c'):
-                file.write(f'{(time.time()-start):.3f} {distance:.3f} x:{r.pose_t[0,0]:.4f} y:{r.pose_t[1,0]:.4f} z:{r.pose_t[2,0]:.4f} rx:{rot_vec.as_rotvec()[0]:.4f} ry: {rot_vec.as_rotvec()[1]:.4f} rz: {rot_vec.as_rotvec()[2]:.4f} \n')
+                file.write(f'{(time.time()-start):.3f} {distance:.3f} {r.pose_t[0,0]:.4f} {r.pose_t[1,0]:.4f} {r.pose_t[2,0]:.4f} {rot_vec.as_rotvec()[0]:.4f} {rot_vec.as_rotvec()[1]:.4f} {rot_vec.as_rotvec()[2]:.4f} \n')
         if keyboard.is_pressed('q'):
             break
 finally:
