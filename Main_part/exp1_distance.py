@@ -17,8 +17,12 @@ from scipy.spatial.transform import Rotation
 
 start = time.time()
 
-file = open('./Main_part/exp1_dist/exp1_distance_honest_filedMikhaildd.txt','w')
+folder_path = './Main_part/data/exp1_dist/protocol_relocations/'
+filename = "ttest" + '.txt'
+
+file = open(folder_path + filename,'w+')
 file.write('hand to marker: 0.110\n')
+file.write('timestamp dist x y z rx ry rz\n')
 
 print('Image processing process started')
 camera_params = (506.19083684, 508.36108854,
