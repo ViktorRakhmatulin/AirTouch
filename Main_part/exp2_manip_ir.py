@@ -15,8 +15,8 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-folder_path = './Main_part/data/exp2/11thApril/'
-filename = "Vik_prob_l" + '.txt'
+folder_path = './Main_part/data/exp2/12thApril/'
+filename = "Viktor_imp_last" + '.txt'
 
 file_name = folder_path + filename
 def coordinate_systems_transform(ee_coord, x_ee):
@@ -66,7 +66,7 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-    arduino = serial.Serial('COM5',baudrate=115200)
+    arduino = serial.Serial('COM7',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(2)
@@ -98,11 +98,16 @@ def image_process(x_ee):
     pose_prev = np.array([0,0,0])
     vel = 0
     data_file = open(file_name,'w+')
+    record_true = False
     try:
         ardu_time = 0
         general_start = time.time()
         #ardu_time = time.time()
         while True:
+            if keyboard.is_pressed('c'):
+                record_true = True
+                print('recording started')
+
             if x_ee.poll():
                 x_end = x_ee.recv()
                 x_end  = x_end[:3]
@@ -146,7 +151,8 @@ def image_process(x_ee):
                 pose_prev = marker_pose
                 distance = np.linalg.norm(marker_pose - x_end)
                 message = str(round(distance,3)) + ' ' + str(round(vel,3)) + ' ' + str(round(time.time()-general_start,2)) + '\n'
-                data_file.write(str(message))
+                if record_true:
+                    data_file.write(str(message))
                 (ptA, ptB, ptC, ptD) = r.corners
                 ptB = (int(ptB[0]), int(ptB[1]))
                 ptC = (int(ptC[0]), int(ptC[1]))
@@ -159,10 +165,10 @@ def image_process(x_ee):
                 cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
                 cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0]+40, ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                if distance < 0.3:
+                if distance < 0.35:
                     ardu_time = time.time()
                     if not fl:
-                        arduino.write(b'suck 1200')
+                        arduino.write(b'suck 1300')
                         print('Sucking')
                         fl = 1
                         #ardu_fl.send(fl)
@@ -185,7 +191,8 @@ def image_process(x_ee):
                 
             else:
                 message = str(0) + ' ' + str(0) + ' ' + str(round(time.time()-general_start,2)) + '\n'
-                data_file.write(message)
+                if record_true:
+                    data_file.write(message)
                 if time.time()-ardu_time > 0.1 and fl:
                     ardu_time = time.time()
                     arduino.write(b'hold')
@@ -255,6 +262,7 @@ def manip_control_non_stop(waypoints,ee_coord):
         time.sleep(0.1)
 
         print(waypoints[i%len(waypoints)])
+        print()
         rob.movel(waypoints[i % len(waypoints)],0.018,0.05,wait=False)
         while True:
             current_position = np.array(rob.getl())
@@ -278,6 +286,7 @@ def main():
         t8 = [0.87760, -0.20860, 0.35763, 0.0348, 1.3320, -0.9303] #toxic position (bottom CLOSE!!!!)
 
         waypoints = [t8,t3,t4,t6,t7,t4,t5,t4]
+        # dir={"0": , "2": 2, "t": 3, "t3": 4, "t3": 5, "t3": 1, "t3": 1 }
         xee = mp.Queue()
         # angles_send, angles_rec = mp.Pipe()
         ee_coord = mp.Queue()
