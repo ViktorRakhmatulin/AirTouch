@@ -16,7 +16,7 @@ from scipy.spatial.transform import Rotation
 import pickle
 
 folder_path = './Main_part/data/exp2/12thApril/'
-filename = "Viktor_imp_last" + '.txt'
+filename = "Ali_no_imp" + '.txt'
 
 file_name = folder_path + filename
 def coordinate_systems_transform(ee_coord, x_ee):
