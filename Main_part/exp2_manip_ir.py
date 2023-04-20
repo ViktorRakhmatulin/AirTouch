@@ -15,8 +15,8 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-folder_path = './Main_part/data/exp2/12thApril/'
-filename = "Oleg_imp" + '.txt'
+folder_path = './Main_part/data/exp2/20thApril/'
+filename = "Rimma_imp" + '.txt'
 
 file_name = folder_path + filename
 def coordinate_systems_transform(ee_coord, x_ee):
@@ -66,7 +66,7 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-    arduino = serial.Serial('COM7',baudrate=115200)
+    arduino = serial.Serial('COM8',baudrate=115200)
     time.sleep(1)
     arduino.write(b'init')
     time.sleep(2)
@@ -163,7 +163,7 @@ def image_process(x_ee):
                 cv2.line(opencvImage, ptB, ptC, (0, 255, 0), 2)
                 cv2.line(opencvImage, ptC, ptD, (0, 255, 0), 2)
                 cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
-                cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0]+40, ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0], ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
                 if distance < 0.35:
                     ardu_time = time.time()
