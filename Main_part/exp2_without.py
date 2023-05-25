@@ -17,7 +17,7 @@ import pickle
 
 # folder_path = './Main_part/data/exp2/25thMay/'
 folder_path=r"C:\Users\serge\Desktop\DarkApril\Main_part\data\exp2\25thMay"
-filename = "Viktor_no_feed" + '.txt'
+filename = "Zelim" + '.txt'
 
 file_name = folder_path +"/"+ filename
 def coordinate_systems_transform(ee_coord, x_ee):
