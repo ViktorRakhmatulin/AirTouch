@@ -15,14 +15,8 @@ import keyboard
 from scipy.spatial.transform import Rotation
 import pickle
 
-<<<<<<< HEAD
-# folder_path = './Main_part/data/exp2/25thMay/'
-folder_path=r"C:\Users\serge\Desktop\DarkApril\Main_part\data\exp2\25thMay"
-filename = "Viktor_no_feed" + '.txt'
-=======
-folder_path = './Main_part/data/exp2/20thApril/'
-filename = "Miguel_imp" + '.txt'
->>>>>>> 0211b3da66c1be22a1a23873b78214cfcf8d89e9
+folder_path = './Main_part/data/exp2/16thSep'
+filename = "Viktor_Imp" + '.txt'
 
 file_name = folder_path +"/"+ filename
 def coordinate_systems_transform(ee_coord, x_ee):
@@ -72,19 +66,11 @@ def image_process(x_ee):
     print('Image processing process started')
     fl = 0
     dt = 1
-<<<<<<< HEAD
-    arduino = serial.Serial('COM7',baudrate=115200)
-    # time.sleep(1)
-    # arduino.write(b'init')
-    # time.sleep(2)
-    # arduino.write(b'go to 023')
-=======
-    arduino = serial.Serial('COM8',baudrate=115200)
-    time.sleep(1)
+    arduino = serial.Serial('COM8',baudrate=9600)
+    time.sleep(5)
     arduino.write(b'init')
     time.sleep(2)
-    arduino.write(b'go to 023')
->>>>>>> 0211b3da66c1be22a1a23873b78214cfcf8d89e9
+    # arduino.write(b'go to 023')
     print('Initialized')
 
     camera_params = (506.19083684, 508.36108854,
@@ -108,7 +94,7 @@ def image_process(x_ee):
         debug=0)
     
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('recognition.mp4',fourcc,30,(640,480))
+    out = cv2.VideoWriter('SMC_Video_IR_Test_16Sep_02.mp4',fourcc,30,(640,480))
     pose_prev = np.array([0,0,0])
     vel = 0
     data_file = open(file_name,'w+')
@@ -179,24 +165,19 @@ def image_process(x_ee):
                 cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
                 cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0], ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                if distance < 0.35:
+                if distance < 0.45:
                     ardu_time = time.time()
                     if not fl:
-<<<<<<< HEAD
-                        # arduino.write(b'suck 1200')
-                        arduino.write(b'Mode 1')
-=======
                         arduino.write(b'suck 1300')
->>>>>>> 0211b3da66c1be22a1a23873b78214cfcf8d89e9
                         print('Sucking')
                         fl = 1
                         #ardu_fl.send(fl)
-                        #ardu_time = time.time()
+                        ardu_time = time.time()
                 else:
                     if fl and (time.time()-ardu_time > 0.1):
                         ardu_time = time.time()
-                        # arduino.write(b'hold')
-                        arduino.write(b'Mode 0')
+                        arduino.write(b'hold')
+                        #arduino.write(b'Mode 0')
                         print('Stopping')
                         fl=0
                         #ardu_fl.send(fl)
@@ -215,8 +196,8 @@ def image_process(x_ee):
                     data_file.write(message)
                 if time.time()-ardu_time > 0.1 and fl:
                     ardu_time = time.time()
-                    # arduino.write(b'hold')
-                    arduino.write(b'Mode 0')
+                    arduino.write(b'hold')
+                    # arduino.write(b'Mode 0')
                     print('Stopping')
                     fl=0
             out.write(opencvImage)
@@ -238,10 +219,10 @@ def image_process(x_ee):
 
 
 def arduino_control(ardu_fl):
-    arduino = serial.Serial('COM7',baudrate=115200)
-    # time.sleep(1)
-    # arduino.write(b'init')
-    # time.sleep(1)
+    arduino = serial.Serial('COM8',baudrate=9600)
+    time.sleep(1)
+    arduino.write(b'init')
+    time.sleep(1)
     # arduino.write(b'go to 23')
     try:
         while True:
@@ -258,6 +239,7 @@ def arduino_control(ardu_fl):
                 print(fl)
     finally:
         ardu_fl.close()
+    pass
 
 
 
@@ -271,7 +253,7 @@ def manip_control_non_stop(waypoints,ee_coord):
     Output: manipulator control, joint angles array.
     
     '''
-    rob = urx.Robot('192.168.88.139')
+    rob = urx.Robot('192.168.88.28')
     
     print('Robot connected')
     print("manip_control process started")
@@ -298,16 +280,16 @@ def manip_control_non_stop(waypoints,ee_coord):
 
 def main():
     try:
-        t1 = [0.778,-0.305,0.440,1.1635,-4.2655,1.3380] # center far away
-        t2 = [0.852,-0.218,0.414,0.164,-3.957,2.137] # bottom close
-        t3 = [0.85331,-0.24825,0.43377,0.5521,-4.1533,1.4024] #up close
-        t4 = [0.90372,-0.33657,0.50376,1.0226,-4.3088,1.0112] # center socket
-        t5 = [0.95154,-0.33621,0.49041,1.2527,-4.2915,1.1339] #socket
-        t6 = [0.82262,-0.37907,0.44094,1.3752,-4.3259,0.9087] #far away
-        t7 = [0.84832,-0.27680,0.35760,0.8533,-4.1342,1.9250] # center down
+        t1 = [0.214,0.731,0.652,0.03,-2.39,-1.93] # center pos
+        t2 = [0.059,0.818,0.508,0.271,1.997,2.268] # toxic near socker
+        t3 = [0.098,0.962,0.531,0.027,2.234,2.187] # socket
+        t4 = [0.349,0.747,0.636,0.294,-2.083,-1.884] # far from user and safe
+        t5 = [0.162,0.575,0.507,0.115,-1.954,-2.398] # far from socket
+        t6 = [] #far away
+        t7 = [] # center down
         t8 = [0.87760, -0.20860, 0.35763, 0.0348, 1.3320, -0.9303] #toxic position (bottom CLOSE!!!!)
 
-        waypoints = [t8,t3,t4,t6,t7,t4,t5,t4]
+        waypoints = [t1,t2,t3,t4,t5]
         # dir={"0": , "2": 2, "t": 3, "t3": 4, "t3": 5, "t3": 1, "t3": 1 }
         xee = mp.Queue()
         # angles_send, angles_rec = mp.Pipe()

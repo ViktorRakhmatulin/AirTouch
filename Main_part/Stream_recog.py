@@ -149,8 +149,12 @@ try:
             T_marker[:3,:3] = numpy.array(rotation_marker)
             T_marker[:3,3] = translation_marker
             T_marker[3,3] = 1
-            T_marker_base = numpy.array([[0,-1,0,0],[-1,0,0,0.75],[0,0,-1,0],[0,0,0,1]])
+            T_marker_base = numpy.array([[1,0,0,0.05],
+                                         [0,-1,0,0.725],
+                                         [0,0,-1,-0.02],
+                                         [0,0,0,1]])
             result_transform = T_marker @ T_marker_base
+            print(result_transform)
             with open('camera_to_base.pickle','wb') as file:
                 pickle.dump(result_transform,file)
             break
