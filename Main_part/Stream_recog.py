@@ -149,9 +149,9 @@ try:
             T_marker[:3,:3] = numpy.array(rotation_marker)
             T_marker[:3,3] = translation_marker
             T_marker[3,3] = 1
-            T_marker_base = numpy.array([[1,0,0,0.05],
-                                         [0,-1,0,0.725],
-                                         [0,0,-1,-0.02],
+            T_marker_base = numpy.array([[1,0,0,0.0],
+                                         [0,-1,0,0.525],
+                                         [0,0,-1,0.02],
                                          [0,0,0,1]])
             result_transform = T_marker @ T_marker_base
             print(result_transform)

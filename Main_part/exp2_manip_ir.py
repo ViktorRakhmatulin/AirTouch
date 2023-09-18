@@ -16,7 +16,8 @@ from scipy.spatial.transform import Rotation
 import pickle
 
 folder_path = './Main_part/data/exp2/16thSep'
-filename = "Viktor_Imp" + '.txt'
+filename = "Viktor_Imp1" + '.txt'
+video_name = 'Scenario5.mp4'
 
 file_name = folder_path +"/"+ filename
 def coordinate_systems_transform(ee_coord, x_ee):
@@ -94,7 +95,7 @@ def image_process(x_ee):
         debug=0)
     
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter('SMC_Video_IR_Test_16Sep_02.mp4',fourcc,30,(640,480))
+    out = cv2.VideoWriter(video_name,fourcc,30,(640,480))
     pose_prev = np.array([0,0,0])
     vel = 0
     data_file = open(file_name,'w+')
@@ -149,7 +150,7 @@ def image_process(x_ee):
                 marker_pose = np.array(r.pose_t).ravel()
                 vel = np.linalg.norm((marker_pose - pose_prev)/dt)
                 pose_prev = marker_pose
-                distance = np.linalg.norm(marker_pose - x_end)
+                distance = np.linalg.norm(marker_pose - x_end) - 0.05
                 message = str(round(distance,3)) + ' ' + str(round(vel,3)) + ' ' + str(round(time.time()-general_start,2)) + '\n'
                 if record_true:
                     data_file.write(str(message))
@@ -165,10 +166,10 @@ def image_process(x_ee):
                 cv2.line(opencvImage, ptD, ptA, (0, 255, 0), 2)
                 cv2.putText(opencvImage,f'Distance: {distance:.2f}',(ptA[0], ptA[1] + 45),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
                 
-                if distance < 0.45:
+                if distance < 0.35:
                     ardu_time = time.time()
                     if not fl:
-                        arduino.write(b'suck 1300')
+                        arduino.write(b'suck 1250')
                         print('Sucking')
                         fl = 1
                         #ardu_fl.send(fl)
@@ -267,7 +268,7 @@ def manip_control_non_stop(waypoints,ee_coord):
 
         print(waypoints[i%len(waypoints)])
         print()
-        rob.movel(waypoints[i % len(waypoints)],0.018,0.05,wait=False)
+        #rob.movel(waypoints[i % len(waypoints)],0.018,0.05,wait=False)
         while True:
             current_position = np.array(rob.getl())
             ee_coord.put(current_position)
